@@ -1,5 +1,4 @@
 const dotenv = require('dotenv');
-const { logger } = require('sequelize/lib/utils/logger');
 
 dotenv.config();
 

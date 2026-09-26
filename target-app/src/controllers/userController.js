@@ -2,7 +2,7 @@ import { User } from '../database/models';
 
 export const getUser = async (req, res) => {
   try {
-    const user = await User.findOne({ where: { email: req.params.email } });
+    const user = await User.findOne({ where: { emailAddress: req.params.emailAddress } });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
