@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-console.log('this is placeholder for models');
-=======
 'use strict';
 
 const fs = require('fs');
@@ -56,4 +53,3 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 module.exports = db;
->>>>>>> 0f49992 (Adding new things yoyo)
