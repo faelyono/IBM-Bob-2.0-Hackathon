@@ -1,10 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bob Release Guard</title>
-<style>
+<html>
+ <head>
+  <title>
+   Bob Release Guard - Vision
+  </title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+  <style>
+   /* === BASE STYLES === */
+body, html {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-color: #000; /* Dark background */
+}
+
+/* === STATE TRANSITIONS === */
+.state-container {
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    width: 100%;
+    min-height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#state1 {
+    z-index: 10;
+}
+
+#state2 {
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+#state2.active {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    z-index: 20;
+}
+
+#state1.hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+/* === HERO STYLES (State 1) === */
+
   @import url('https://fonts.googleapis.com/css2?family=Fustat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap');
 
   :root {
@@ -14,7 +59,7 @@
     --green: rgba(90, 225, 76, 0.89);
   }
 
-  body, html {
+  body, #state1 {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -393,129 +438,535 @@
     transition: opacity 0.5s ease;
   }
 
-</style>
-</head>
-<body>
 
-  <!-- STATE 1: HERO SECTION -->
-  <div id="state1" class="fade-transition">
-    <div id="video-container">
-      <video id="bg-video" muted playsinline>
-        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260329_050842_be71947f-f16e-4a14-810c-06e83d23ddb5.mp4" type="video/mp4">
-      </video>
-    </div>
 
-    <nav>
-      <div class="logo">Bob Release Guard</div>
-      <div class="menu">
-        <a href="#">Platform</a>
-        <a href="#">Features <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></a>
-        <a href="#">Projects</a>
-        <a href="#">Community</a>
-        <a href="#">Contact</a>
-      </div>
-      <div class="nav-buttons">
-        <button class="btn-signup">Sign Up</button>
-        <button class="btn-login">Log In</button>
-      </div>
-    </nav>
+/* === DASHBOARD STYLES (State 2) === */
 
-    <div class="hero-content">
-      <div class="badge-container">
-        <div class="badge-new">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          New
-        </div>
-        <div class="badge-text">Discover what's possible</div>
-      </div>
-      
-      <h1>Transform Data Quickly</h1>
-      <p class="subtitle">Upload your repository and get powerful AI insights right away. Work smarter and achieve deployment safety effortlessly.</p>
+        :root {
+            --bg: #f8f9fa;
+            --text-heading: #1d1d1f;
+            --text-body: #515154;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            
+            --orb-cyan: #00f2fe;
+            --orb-magenta: #fe0979;
+            --orb-violet: #8a2be2;
 
-      <div class="search-box">
-        <div class="search-top">
-          <div class="search-top-left">
-            <span>60/450 credits</span>
-            <button class="btn-upgrade">Upgrade</button>
-          </div>
-          <div class="search-top-right">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 12L2.5 12"/></svg>
-            Powered by GPT-4o
-          </div>
-        </div>
+            --danger: #ff4b4b;
+            --danger-bg: rgba(255, 75, 75, 0.1);
+            --success: #34c759;
+            --success-bg: rgba(52, 199, 89, 0.1);
+            --warning: #ff9f0a;
+            --warning-bg: rgba(255, 159, 10, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        #state2 {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-heading);
+            font-weight: 600;
+        }
+
+        /* Holographic Orbs */
+        .orb-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.6;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--orb-cyan);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--orb-magenta);
+            bottom: -50px;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 700px;
+            height: 700px;
+            background: var(--orb-violet);
+            top: 40%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 50px) scale(1.1); }
+            100% { transform: translate(-50px, 100px) scale(0.9); }
+        }
+
+        /* Glassmorphism Utility */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+            min-width: 0;
+        }
+
+        /* State 1: Landing */
+        #landing-state {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .logo-container {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-container:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 24px;
+            animation: pulse 3s infinite ease-in-out;
+            fill: none;
+            stroke: var(--text-heading);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .logo-title {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .logo-subtitle {
+            font-size: 1rem;
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        #loading-text {
+            margin-top: 40px;
+            font-size: 1.1rem;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        /* State 2: Dashboard */
+        #dashboard-state {
+            display: none;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            border-radius: 100px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--text-heading);
+        }
+
+        .nav-brand svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: var(--text-heading);
+            stroke-width: 2;
+        }
+
+        .nav-meta {
+            display: flex;
+            gap: 12px;
+        }
+
+        .pill {
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Main Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Hero / Score Section */
+        .hero-section {
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .score-ring {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .score-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .score-bg {
+            fill: none;
+            stroke: rgba(0,0,0,0.05);
+            stroke-width: 8;
+        }
+
+        .score-progress {
+            fill: none;
+            stroke: var(--success);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 565.48; /* 2 * pi * r (90) */
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-text-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 100px;
+            display: inline-block;
+        }
         
-        <div class="main-input-area">
-          <input type="text" placeholder="Enter GitHub Repository URL...">
-          <button class="btn-submit" onclick="transitionToDashboard()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
-          </button>
-        </div>
+        .status-BLOCKED {
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+        
+        .status-SAFE {
+            color: var(--success);
+            background: var(--success-bg);
+        }
 
-        <div class="search-bottom">
-          <div class="search-bottom-left">
-            <button class="icon-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              Attach
-            </button>
-            <button class="icon-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              Voice
-            </button>
-            <button class="icon-btn">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              Prompts
-            </button>
-          </div>
-          <div>0/3,000</div>
-        </div>
-      </div>
-    </div>
+        /* Agents Matrix */
+        .agents-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .agent-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .agent-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .risk-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 100px;
+            text-transform: uppercase;
+        }
+
+        .risk-HIGH { background: var(--danger-bg); color: var(--danger); }
+        .risk-MEDIUM { background: var(--warning-bg); color: var(--warning); }
+        .risk-NONE, .risk-LOW { background: var(--success-bg); color: var(--success); }
+
+        .agent-#state2 {
+            font-size: 0.9rem;
+            flex-grow: 1;
+        }
+
+        .finding-item {
+            padding: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .finding-item strong {
+            display: block;
+            color: var(--text-heading);
+            margin-bottom: 4px;
+        }
+
+        .recommendation {
+            margin-top: 12px;
+            font-style: italic;
+            color: var(--text-heading);
+        }
+
+        /* Bottom Grid */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        /* Generic Panel */
+        .panel {
+            padding: 24px;
+        }
+        
+        .panel-title {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Rollback Panel */
+        .code-window {
+            background: #1d1d1f;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .code-header {
+            background: #2d2d2f;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .mac-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .code-content {
+            padding: 16px;
+            color: #a9b7c6;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .code-keyword { color: #cc7832; }
+        .code-string { color: #6a8759; }
+        
+        /* Checklist */
+        .checklist {
+            list-style: none;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .check-item:last-child {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            color: var(--danger);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .agents-matrix { grid-template-columns: 1fr; }
+            .navbar { flex-direction: column; gap: 16px; border-radius: 24px; }
+        }
+  </style>
+ </head>
+ <body>
+  <div class="state-container" id="state1">
   </div>
-
-  <!-- LOADING STATE -->
-  <div id="loading" class="fade-transition">
-    <div class="spinner"></div>
-    <div>Initializing AI Subroutines...</div>
+  <div class="state-container" id="state2">
   </div>
-
-  <!-- STATE 2: DASHBOARD -->
-  <div id="state2" class="fade-transition">
-    <div class="dashboard-grid">
-      <div class="glass-panel">
-        <h2 style="margin-top:0; font-family:'Fustat'">Release Score</h2>
-        <div class="score-ring">
-          <div class="score-content">
-            <div class="score-value" id="overall-score">85</div>
-            <div class="score-label">Production Ready</div>
-          </div>
-        </div>
-        <div style="font-size:14px; opacity:0.8">
-          <p>Commit: <strong id="commit-hash">#a1b2c3d</strong></p>
-          <p>Branch: <strong>main</strong></p>
-          <p>Checks: <strong>4/4 Passed</strong></p>
-        </div>
-      </div>
-
-      <div class="glass-panel">
-        <h2 style="margin-top:0; font-family:'Fustat'">AI Agents Grid</h2>
-        <div class="agents-grid" id="agents-container">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-
-      <div class="glass-panel rollback-sim">
-        <h2 style="margin-top:0; font-family:'Fustat'">Rollback Simulation</h2>
-        <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; font-family:monospace; font-size:12px; color:#5ae14c;">
-          $ init-rollback --dry-run<br>
-          > Checking state... OK<br>
-          > Verifying snapshots... OK<br>
-          > Simulation successful. Zero downtime expected.
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
+   // === STATE MANAGEMENT & INITIALIZATION ===
+
+function transitionToDashboard() {
+    const state1 = document.getElementById('state1');
+    const state2 = document.getElementById('state2');
+    
+    state1.classList.add('hidden');
+    state2.classList.add('active');
+    
+    // Trigger dashboard initialization if it exists
+    if (typeof init === 'function') {
+        init();
+    }
+}
+
+function transitionToHero() {
+    const state1 = document.getElementById('state1');
+    const state2 = document.getElementById('state2');
+    
+    state2.classList.remove('active');
+    state1.classList.remove('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Hook up the black submit button in State 1 to transition
+    // Find the submit button in hero (you might need to adjust the selector)
+    const submitBtn = document.querySelector('#state1 button[type="submit"], #state1 .submit-btn, #state1 .search-btn, #state1 form button');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            transitionToDashboard();
+        });
+    }
+
+    // 2. Hook up Bob Release Guard logo to return to State 1
+    // The logo text or image in dashboard navbar
+    const bobLogo = document.querySelector('#state2 .logo, #state2 .navbar-brand, #state2 [class*="logo"]');
+    if (bobLogo) {
+        bobLogo.style.cursor = 'pointer';
+        bobLogo.addEventListener('click', (e) => {
+            e.preventDefault();
+            transitionToHero();
+        });
+    }
+});
+
+// === HERO SCRIPTS ===
+
     // VIDEO FADE SYSTEM (Custom JS)
     const video = document.getElementById('bg-video');
     const container = document.getElementById('video-container');
@@ -650,6 +1101,162 @@
         .catch(() => renderAgents(FALLBACK_DATA));
     }
 
+  
+
+// === DASHBOARD SCRIPTS ===
+
+        const FALLBACK_DATA = {
+            "generatedAt": "2025-09-26T08:30:00.000Z",
+            "commit": "177dc6a", "branch": "main", "score": 20, "status": "BLOCKED",
+            "agents": {
+                "schema": { "riskLevel": "HIGH", "findings": [ { "file": "user.js", "change": "renamed email", "impact": "breaking" } ], "recommendation": "Fix it" },
+                "config": { "riskLevel": "NONE", "findings": [], "recommendation": "All good" },
+                "dependency": { "riskLevel": "NONE", "findings": [], "recommendation": "All good" },
+                "rollback": { "rollbackSafe": true, "verdict": "PASS", "executionMethod": "hybrid-manual", "branchName": "rollback-test", "verificationQuery": "SELECT *", "verificationOutput": "ok", "note": "manual proof" }
+            },
+            "blockers": ["Schema mismatch"],
+            "requiredFixes": ["Update target-app/src/database/models/user.js", "Update controller"]
+        };
+
+        let reportData = null;
+
+        async function loadData() {
+            try {
+                const res = await fetch('/report.json');
+                if (!res.ok) throw new Error('Not found');
+                reportData = await res.json();
+            } catch (e1) {
+                try {
+                    const res2 = await fetch('./report.json');
+                    if (!res2.ok) throw new Error('Not found');
+                    reportData = await res2.json();
+                } catch (e2) {
+                    console.log("Using fallback data");
+                    reportData = FALLBACK_DATA;
+                }
+            }
+        }
+
+        function getAgentIcon(name) {
+            const icons = {
+                'schema': '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>',
+                'config': '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>',
+                'dependency': '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+                'rollback': '<path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path>'
+            };
+            return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icons[name.toLowerCase()] || ''}</svg>`;
+        }
+
+        function renderDashboard() {
+            // Navbar
+            document.getElementById('nav-meta').innerHTML = `
+                <div class="pill">Commit: ${reportData.commit.substring(0,7)}</div>
+                <div class="pill">Branch: ${reportData.branch}</div>
+            `;
+
+            // Score & Status
+            document.getElementById('score-value').innerText = reportData.score;
+            const scoreCircle = document.getElementById('score-circle');
+            const circumference = 565.48;
+            const offset = circumference - (reportData.score / 100) * circumference;
+            
+            // Set initial offset for animation
+            setTimeout(() => {
+                scoreCircle.style.strokeDashoffset = offset;
+                if(reportData.score < 50) scoreCircle.style.stroke = 'var(--danger)';
+                else if (reportData.score < 80) scoreCircle.style.stroke = 'var(--warning)';
+                else scoreCircle.style.stroke = 'var(--success)';
+            }, 500);
+
+            const statusEl = document.getElementById('main-status');
+            statusEl.innerText = reportData.status === 'BLOCKED' ? 'Deployment Blocked' : 'Safe for Release';
+            statusEl.className = `status-badge status-${reportData.status}`;
+
+            // Agents Matrix
+            let agentsHtml = '';
+            for (const [name, data] of Object.entries(reportData.agents)) {
+                let riskClass = data.riskLevel ? `risk-${data.riskLevel}` : (data.rollbackSafe ? 'risk-NONE' : 'risk-HIGH');
+                let riskText = data.riskLevel || (data.rollbackSafe ? 'SAFE' : 'RISK');
+                
+                let findingsHtml = '';
+                if (data.findings && data.findings.length > 0) {
+                    findingsHtml = data.findings.map(f => `
+                        <div class="finding-item">
+                            <strong>${f.file || 'Global'}</strong>
+                            ${f.change || f.issue || ''}
+                        </div>
+                    `).join('');
+                }
+
+                agentsHtml += `
+                    <div class="glass agent-card">
+                        <div class="agent-header">
+                            <div class="agent-title">
+                                ${getAgentIcon(name)}
+                                ${name.charAt(0).toUpperCase() + name.slice(1)}
+                            </div>
+                            <span class="risk-badge ${riskClass}">${riskText}</span>
+                        </div>
+                        <div class="agent-body">
+                            ${findingsHtml}
+                            <div class="recommendation">${data.recommendation || data.note || ''}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            document.getElementById('agents-matrix').innerHTML = agentsHtml;
+
+            // Rollback Proof
+            const rb = reportData.agents.rollback;
+            if (rb) {
+                let codeHtml = `<span class="code-keyword">Method:</span> <span class="code-string">${rb.executionMethod}</span>\n`;
+                if(rb.verificationQuery) codeHtml += `<span class="code-keyword">Query:</span> ${rb.verificationQuery}\n`;
+                if(rb.verificationOutput) codeHtml += `<span class="code-keyword">Output:</span>\n${rb.verificationOutput}\n`;
+                document.getElementById('rollback-content').innerHTML = `<pre>${codeHtml}</pre>`;
+            } else {
+                document.getElementById('rollback-content').innerHTML = 'No rollback data available.';
+            }
+
+            // Fixes Checklist
+            const fixesHtml = reportData.requiredFixes.map(fix => `
+                <li class="check-item">
+                    <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <span>${fix}</span>
+                </li>
+            `).join('');
+            document.getElementById('fixes-list').innerHTML = fixesHtml || '<li class="check-item">No fixes required.</li>';
+        }
+
+        // Interaction Logic
+        document.getElementById('init-btn').addEventListener('click', async () => {
+            const landing = document.getElementById('landing-state');
+            const dashboard = document.getElementById('dashboard-state');
+            const loadingText = document.getElementById('loading-text');
+            const subtitle = document.querySelector('.logo-subtitle');
+
+            subtitle.style.display = 'none';
+            loadingText.style.opacity = '1';
+
+            // Load data during transition
+            await loadData();
+            renderDashboard();
+
+            setTimeout(() => {
+                landing.style.opacity = '0';
+                landing.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    landing.style.display = 'none';
+                    dashboard.style.display = 'block';
+                    
+                    // Trigger reflow to ensure transition runs
+                    void dashboard.offsetWidth; 
+                    
+                    dashboard.style.opacity = '1';
+                    dashboard.style.transform = 'translateY(0)';
+                }, 800);
+            }, 1000);
+        });
   </script>
-</body>
+ </body>
 </html>
