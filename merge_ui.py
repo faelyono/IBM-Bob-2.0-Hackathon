@@ -112,12 +112,12 @@ body, html {
     
     # 4. Merge Bodies
     state1_div = out_soup.new_tag('div', id='state1', **{'class': 'state-container'})
-    for child in hero_soup.body.contents:
+    for child in list(hero_soup.body.contents):
         if child.name != 'script':
             state1_div.append(child)
             
     state2_div = out_soup.new_tag('div', id='state2', **{'class': 'state-container'})
-    for child in dash_soup.body.contents:
+    for child in list(dash_soup.body.contents):
         if child.name != 'script':
             state2_div.append(child)
             

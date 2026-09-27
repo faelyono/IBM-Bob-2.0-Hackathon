@@ -915,8 +915,320 @@ body, html {
  </head>
  <body>
   <div class="state-container" id="state1">
+   <!-- STATE 1: HERO SECTION -->
+   <div class="fade-transition" id="state1">
+    <div id="video-container">
+     <video id="bg-video" muted="" playsinline="">
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260329_050842_be71947f-f16e-4a14-810c-06e83d23ddb5.mp4" type="video/mp4"/>
+     </video>
+    </div>
+    <nav>
+     <div class="logo">
+      Bob Release Guard
+     </div>
+     <div class="menu">
+      <a href="#">
+       Platform
+      </a>
+      <a href="#">
+       Features
+       <svg fill="none" height="12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="12">
+        <polyline points="6 9 12 15 18 9">
+        </polyline>
+       </svg>
+      </a>
+      <a href="#">
+       Projects
+      </a>
+      <a href="#">
+       Community
+      </a>
+      <a href="#">
+       Contact
+      </a>
+     </div>
+     <div class="nav-buttons">
+      <button class="btn-signup">
+       Sign Up
+      </button>
+      <button class="btn-login">
+       Log In
+      </button>
+     </div>
+    </nav>
+    <div class="hero-content">
+     <div class="badge-container">
+      <div class="badge-new">
+       <svg fill="white" height="12" viewbox="0 0 24 24" width="12">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z">
+        </path>
+       </svg>
+       New
+      </div>
+      <div class="badge-text">
+       Discover what's possible
+      </div>
+     </div>
+     <h1>
+      Transform Data Quickly
+     </h1>
+     <p class="subtitle">
+      Upload your repository and get powerful AI insights right away. Work smarter and achieve deployment safety effortlessly.
+     </p>
+     <div class="search-box">
+      <div class="search-top">
+       <div class="search-top-left">
+        <span>
+         60/450 credits
+        </span>
+        <button class="btn-upgrade">
+         Upgrade
+        </button>
+       </div>
+       <div class="search-top-right">
+        <svg fill="none" height="16" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="16">
+         <path d="M12 2a10 10 0 1 0 10 10H12V2z">
+         </path>
+         <path d="M12 12L2.5 12">
+         </path>
+        </svg>
+        Powered by GPT-4o
+       </div>
+      </div>
+      <div class="main-input-area">
+       <input placeholder="Enter GitHub Repository URL..." type="text"/>
+       <button class="btn-submit" onclick="transitionToDashboard()">
+        <svg fill="none" height="16" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="16">
+         <line x1="12" x2="12" y1="19" y2="5">
+         </line>
+         <polyline points="5 12 12 5 19 12">
+         </polyline>
+        </svg>
+       </button>
+      </div>
+      <div class="search-bottom">
+       <div class="search-bottom-left">
+        <button class="icon-btn">
+         <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+          </path>
+         </svg>
+         Attach
+        </button>
+        <button class="icon-btn">
+         <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z">
+          </path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2">
+          </path>
+          <line x1="12" x2="12" y1="19" y2="23">
+          </line>
+          <line x1="8" x2="16" y1="23" y2="23">
+          </line>
+         </svg>
+         Voice
+        </button>
+        <button class="icon-btn">
+         <svg fill="none" height="14" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="14">
+          <circle cx="11" cy="11" r="8">
+          </circle>
+          <line x1="21" x2="16.65" y1="21" y2="16.65">
+          </line>
+         </svg>
+         Prompts
+        </button>
+       </div>
+       <div>
+        0/3,000
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+   <!-- LOADING STATE -->
+   <div class="fade-transition" id="loading">
+    <div class="spinner">
+    </div>
+    <div>
+     Initializing AI Subroutines...
+    </div>
+   </div>
+   <!-- STATE 2: DASHBOARD -->
+   <div class="fade-transition" id="state2">
+    <div class="dashboard-grid">
+     <div class="glass-panel">
+      <h2 style="margin-top:0; font-family:'Fustat'">
+       Release Score
+      </h2>
+      <div class="score-ring">
+       <div class="score-content">
+        <div class="score-value" id="overall-score">
+         85
+        </div>
+        <div class="score-label">
+         Production Ready
+        </div>
+       </div>
+      </div>
+      <div style="font-size:14px; opacity:0.8">
+       <p>
+        Commit:
+        <strong id="commit-hash">
+         #a1b2c3d
+        </strong>
+       </p>
+       <p>
+        Branch:
+        <strong>
+         main
+        </strong>
+       </p>
+       <p>
+        Checks:
+        <strong>
+         4/4 Passed
+        </strong>
+       </p>
+      </div>
+     </div>
+     <div class="glass-panel">
+      <h2 style="margin-top:0; font-family:'Fustat'">
+       AI Agents Grid
+      </h2>
+      <div class="agents-grid" id="agents-container">
+       <!-- Dynamically populated -->
+      </div>
+     </div>
+     <div class="glass-panel rollback-sim">
+      <h2 style="margin-top:0; font-family:'Fustat'">
+       Rollback Simulation
+      </h2>
+      <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; font-family:monospace; font-size:12px; color:#5ae14c;">
+       $ init-rollback --dry-run
+       <br/>
+       &gt; Checking state... OK
+       <br/>
+       &gt; Verifying snapshots... OK
+       <br/>
+       &gt; Simulation successful. Zero downtime expected.
+      </div>
+     </div>
+    </div>
+   </div>
   </div>
   <div class="state-container" id="state2">
+   <!-- Holographic Background -->
+   <div class="orb-container">
+    <div class="orb orb-1">
+    </div>
+    <div class="orb orb-2">
+    </div>
+    <div class="orb orb-3">
+    </div>
+   </div>
+   <!-- State 1: Landing -->
+   <div id="landing-state">
+    <div class="logo-container" id="init-btn">
+     <svg class="logo-svg" viewbox="0 0 24 24">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z">
+      </path>
+     </svg>
+     <h1 class="logo-title">
+      Bob Release Guard
+     </h1>
+     <p class="logo-subtitle">
+      Click to Initialize
+     </p>
+    </div>
+    <div id="loading-text">
+     Initializing AI Subroutines...
+    </div>
+   </div>
+   <!-- State 2: Dashboard -->
+   <div id="dashboard-state">
+    <nav class="navbar glass">
+     <div class="nav-brand">
+      <svg viewbox="0 0 24 24">
+       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z">
+       </path>
+      </svg>
+      Bob Release Guard
+     </div>
+     <div class="nav-meta" id="nav-meta">
+      <!-- Pills injected by JS -->
+     </div>
+    </nav>
+    <div class="dashboard-grid">
+     <!-- Hero Score -->
+     <div class="glass hero-section">
+      <div class="score-ring">
+       <svg viewbox="0 0 200 200">
+        <circle class="score-bg" cx="100" cy="100" r="90">
+        </circle>
+        <circle class="score-progress" cx="100" cy="100" id="score-circle" r="90">
+        </circle>
+       </svg>
+       <div class="score-text-container">
+        <div class="score-value" id="score-value">
+         0
+        </div>
+        <div class="score-label">
+         Score
+        </div>
+       </div>
+      </div>
+      <div class="status-badge" id="main-status">
+       Loading...
+      </div>
+     </div>
+     <!-- Agents Matrix -->
+     <div class="agents-matrix" id="agents-matrix">
+      <!-- Cards injected by JS -->
+     </div>
+    </div>
+    <div class="bottom-grid">
+     <!-- Rollback Proof -->
+     <div class="glass panel">
+      <h2 class="panel-title">
+       <svg fill="none" height="24" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="24">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z">
+        </path>
+        <polyline points="9 22 9 12 15 12 15 22">
+        </polyline>
+       </svg>
+       Rollback Simulation
+      </h2>
+      <div class="code-window">
+       <div class="code-header">
+        <div class="mac-dot dot-red">
+        </div>
+        <div class="mac-dot dot-yellow">
+        </div>
+        <div class="mac-dot dot-green">
+        </div>
+       </div>
+       <div class="code-content" id="rollback-content">
+        <!-- Code injected by JS -->
+       </div>
+      </div>
+     </div>
+     <!-- Required Fixes -->
+     <div class="glass panel">
+      <h2 class="panel-title">
+       <svg fill="none" height="24" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" width="24">
+        <polyline points="9 11 12 14 22 4">
+        </polyline>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11">
+        </path>
+       </svg>
+       Required Fixes
+      </h2>
+      <ul class="checklist" id="fixes-list">
+       <!-- Fixes injected by JS -->
+      </ul>
+     </div>
+    </div>
+   </div>
   </div>
   <script>
    // === STATE MANAGEMENT & INITIALIZATION ===
