@@ -1,0 +1,8 @@
+{
+  "name": "Remix bob-release-guard",
+  "description": "Deterministic release verification gate and safety dashboard for IBM Bob 2.0 Hackathon.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
