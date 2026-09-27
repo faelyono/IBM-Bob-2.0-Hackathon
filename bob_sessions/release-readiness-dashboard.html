@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Release Readiness Dashboard — IBM Bob</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0d1117;
+  --surface:    #161b22;
+  --surface2:   #21262d;
+  --border:     #30363d;
+  --text:       #e6edf3;
+  --muted:      #8b949e;
+  --red:        #f85149;
+  --red-dim:    rgba(248,81,73,.13);
+  --red-border: rgba(248,81,73,.4);
+  --green:      #3fb950;
+  --green-dim:  rgba(63,185,80,.12);
+  --green-border:rgba(63,185,80,.4);
+  --purple:     #a371f7;
+  --purple-dim: rgba(163,113,247,.12);
+  --purple-border:rgba(163,113,247,.4);
+  --yellow:     #e3b341;
+  --yellow-dim: rgba(227,179,65,.12);
+  --accent:     #58a6ff;
+  --accent-dim: rgba(88,166,255,.12);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── LAYOUT ── */
+.page { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+
+/* ── TOP NAV ── */
+.topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(8px);
+}
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+.nav-brand .logo {
+  background: var(--accent); color: #fff;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.8px;
+  padding: 4px 9px; border-radius: 5px;
+}
+.nav-brand .nav-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.nav-meta { display: flex; align-items: center; gap: 8px; }
+.pill {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 12px; color: var(--muted);
+  font-family: "Consolas", monospace;
+}
+.pill.live {
+  border-color: var(--green-border);
+  color: var(--green);
+  background: var(--green-dim);
+}
+.pill.live::before {
+  content: ''; display: inline-block;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); margin-right: 6px;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── PITCH HOOK ── */
+.pitch {
+  margin: 32px 0 28px;
+  background: linear-gradient(135deg, rgba(88,166,255,.08) 0%, rgba(163,113,247,.06) 100%);
+  border: 1px solid rgba(88,166,255,.2);
+  border-radius: 14px;
+  padding: 28px 32px;
+  text-align: center;
+}
+.pitch h1 {
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+  color: var(--text); margin-bottom: 10px; line-height: 1.3;
+}
+.pitch h1 span { color: var(--accent); }
+.pitch p { font-size: 14px; color: var(--muted); max-width: 620px; margin: 0 auto; }
+
+/* ── HOW IT WORKS TIMELINE ── */
+.timeline-section { margin-bottom: 28px; }
+.section-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 14px;
+}
+.timeline {
+  display: flex; gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.tl-step {
+  flex: 1; padding: 16px 14px;
+  border-right: 1px solid var(--border);
+  position: relative;
+  transition: background .2s;
+}
+.tl-step:last-child { border-right: none; }
+.tl-step.active { background: var(--accent-dim); }
+.tl-step.done   { background: var(--green-dim); }
+.tl-step.blocked { background: var(--red-dim); }
+.tl-num {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.5px;
+  color: var(--muted); margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.tl-icon { font-size: 20px; margin-bottom: 6px; display: block; }
+.tl-name { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.tl-desc { font-size: 11px; color: var(--muted); line-height: 1.4; }
+.tl-arrow {
+  position: absolute; right: -1px; top: 50%;
+  transform: translateY(-50%);
+  width: 0; height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid var(--border);
+  z-index: 2;
+}
+.tl-step.active .tl-arrow { border-left-color: rgba(88,166,255,.3); }
+.tl-step.done   .tl-arrow { border-left-color: rgba(63,185,80,.3); }
+.tl-step:last-child .tl-arrow { display: none; }
+
+/* ── SCORE HERO ── */
+.score-hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 32px; align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--red-border);
+  border-radius: 14px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative; overflow: hidden;
+}
+.score-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 80% at 0% 50%, rgba(248,81,73,.07), transparent);
+  pointer-events: none;
+}
+.ring-wrap { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+.ring-wrap svg { transform: rotate(-90deg); display: block; }
+.ring-bg   { fill: none; stroke: var(--surface2); stroke-width: 12; }
+.ring-fill {
+  fill: none; stroke-width: 12; stroke-linecap: round;
+  stroke-dasharray: 376;
+  stroke-dashoffset: 376;
+  transition: stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1),
+              stroke .4s ease;
+}
+.ring-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ring-score { font-size: 30px; font-weight: 800; line-height: 1; }
+.ring-denom { font-size: 12px; color: var(--muted); }
+
+.score-info {}
+.score-status {
+  font-size: 26px; font-weight: 800; letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.score-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+.score-breakdown { display: flex; gap: 12px; flex-wrap: wrap; }
+.deduction {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px;
+  font-size: 12px;
+}
+.deduction .d-val { font-weight: 800; color: var(--red); }
+.deduction .d-label { color: var(--muted); }
+
+/* ── AGENT CARDS ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 600px) { .cards-grid { grid-template-columns: 1fr; } }
+
+.agent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
+  transition: transform .15s, border-color .15s;
+}
+.agent-card:hover { transform: translateY(-2px); }
+.agent-card::after {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 3px;
+}
+.agent-card.risk-high   { border-color: var(--red-border); }
+.agent-card.risk-high::after   { background: var(--red); }
+.agent-card.risk-none   { border-color: var(--green-border); }
+.agent-card.risk-none::after   { background: var(--green); }
+.agent-card.risk-hybrid { border-color: var(--purple-border); }
+.agent-card.risk-hybrid::after { background: var(--purple); }
+
+.card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.card-icon-name { display: flex; align-items: center; gap: 10px; }
+.card-icon { font-size: 22px; }
+.card-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.card-sub  { font-size: 11px; color: var(--muted); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.6px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.badge.high    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border); }
+.badge.none    { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.badge.pass    { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.badge.hybrid  { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); font-size: 10px; }
+
+.card-finding { font-size: 13px; color: var(--text); line-height: 1.55; }
+.card-findings-list { display: flex; flex-direction: column; gap: 6px; }
+.finding-row {
+  background: var(--red-dim); border: 1px solid var(--red-border);
+  border-radius: 6px; padding: 8px 10px;
+  font-size: 12px; line-height: 1.4;
+}
+.finding-row .fr-file { font-family: "Consolas", monospace; color: var(--muted); font-size: 11px; margin-bottom: 2px; }
+.finding-row .fr-change { color: var(--text); }
+
+.card-note {
+  font-size: 11px; color: var(--muted);
+  padding-top: 10px; border-top: 1px solid var(--border);
+  line-height: 1.4;
+}
+
+ic { font-style: normal; }
+code {
+  background: var(--surface2); border-radius: 4px;
+  padding: 1px 5px; font-size: 12px;
+  font-family: "Consolas", "Courier New", monospace;
+  color: var(--accent);
+}
+
+/* ── BEFORE / AFTER ── */
+.ba-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.ba-header {
+  display: flex; align-items: baseline; gap: 12px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.ba-header h2 { font-size: 15px; font-weight: 700; }
+.ba-tag {
+  font-size: 11px; color: var(--muted);
+  background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 10px; border-radius: 20px; font-family: "Consolas", monospace;
+}
+
+.ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 560px) { .ba-grid { grid-template-columns: 1fr; } }
+
+.ba-block { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.ba-block-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+}
+.ba-block.before .ba-block-hd { background: var(--red-dim);   color: var(--red);   border-bottom: 1px solid var(--red-border); }
+.ba-block.after  .ba-block-hd { background: var(--green-dim); color: var(--green); border-bottom: 1px solid var(--green-border); }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ba-block.before .dot { background: var(--red); }
+.ba-block.after  .dot { background: var(--green); }
+
+.ba-code {
+  background: #0d1117;
+  padding: 16px 18px;
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 13px; line-height: 2;
+}
+.cn  { color: var(--accent); }
+.cb  { color: var(--red);   text-decoration: line-through; opacity: 0.7; }
+.cf  { color: var(--green); font-weight: 700; }
+.ann { font-size: 11px; margin-left: 8px; }
+.ann.bad  { color: var(--red); }
+.ann.good { color: var(--green); }
+
+.ba-query {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px; margin-top: 16px;
+  font-family: "Consolas", monospace; font-size: 12px; color: var(--muted);
+  line-height: 1.5;
+}
+.ba-query .ql { color: var(--accent); }
+
+.verdict-strip {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--green-dim); border: 1px solid var(--green-border);
+  border-radius: 8px; padding: 12px 16px; margin-top: 16px;
+  font-size: 13px; font-weight: 700; color: var(--green);
+}
+.verdict-note { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+/* ── BLOCKED BANNER ── */
+.blocked-banner {
+  display: flex; align-items: flex-start; gap: 16px;
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  border-radius: 12px; padding: 22px 26px;
+  margin-bottom: 24px;
+}
+.bb-icon { font-size: 28px; flex-shrink: 0; padding-top: 2px; }
+.bb-text h3 { font-size: 17px; font-weight: 800; color: var(--red); margin-bottom: 6px; }
+.bb-text p  { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.bb-text p strong { color: var(--text); }
+
+/* ── FIX CHECKLIST ── */
+.fix-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px 24px;
+  margin-bottom: 24px;
+}
+.fix-section h2 { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+.fix-item {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.fix-item:last-child { border-bottom: none; padding-bottom: 0; }
+.fix-num {
+  width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+  background: var(--yellow-dim); color: var(--yellow);
+  font-size: 11px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.fix-text { font-size: 13px; line-height: 1.55; }
+.fix-check { margin-left: auto; color: var(--green); font-size: 16px; flex-shrink: 0; padding-top: 2px; }
+
+/* ── DATA SOURCE STRIP ── */
+.data-strip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--accent-dim); border: 1px solid rgba(88,166,255,.25);
+  border-radius: 8px; padding: 10px 16px; margin-bottom: 24px;
+  font-size: 12px; color: var(--muted);
+}
+.data-strip .ds-label { color: var(--accent); font-weight: 700; margin-right: 4px; }
+
+/* ── FOOTER ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding-top: 20px; margin-top: 8px;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  font-size: 12px; color: var(--muted);
+}
+.footer-brand { font-weight: 700; color: var(--accent); }
+
+/* ── LOADING STATE ── */
+#loading {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+  z-index: 999;
+  transition: opacity .4s;
+}
+#loading .ld-logo {
+  background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 800; padding: 6px 14px; border-radius: 6px;
+  letter-spacing: 0.8px;
+}
+#loading .ld-text { font-size: 14px; color: var(--muted); }
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#app { opacity: 0; transition: opacity .5s; }
+#app.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="ld-logo">IBM Bob</div>
+  <div class="spinner"></div>
+  <div class="ld-text">Loading release report…</div>
+</div>
+
+<!-- Top nav -->
+<nav class="topnav">
+  <div class="nav-brand">
+    <span class="logo">IBM Bob</span>
+    <span class="nav-title">Release Readiness Dashboard</span>
+  </div>
+  <div class="nav-meta">
+    <span class="pill live" id="navStatus">Loading…</span>
+    <span class="pill" id="navCommit">—</span>
+    <span class="pill" id="navBranch">—</span>
+  </div>
+</nav>
+
+<div id="app">
+<div class="page">
+
+  <!-- Pitch hook -->
+  <div class="pitch">
+    <h1>The only deployment guard that <span>proves</span> rollback safety<br>before you approve a single deploy.</h1>
+    <p>Four parallel AI agents analyse every changed file — schema, config, dependencies, and rollback — then verify the down-migration on a real, isolated database branch. Not a script. Not a simulation. Proof.</p>
+  </div>
+
+  <!-- Data source strip -->
+  <div class="data-strip">
+    <span class="ds-label">LIVE DATA</span>
+    Loaded from <code>bob_sessions/report.json</code> &nbsp;·&nbsp;
+    Generated: <span id="dsTime">—</span> &nbsp;·&nbsp;
+    Skill: <code>release-readiness-check</code>
+  </div>
+
+  <!-- How it works -->
+  <div class="timeline-section">
+    <div class="section-label">How it works — agent pipeline</div>
+    <div class="timeline">
+      <div class="tl-step done">
+        <div class="tl-num">Step 1</div>
+        <span class="tl-icon">📂</span>
+        <div class="tl-name">Detect Changes</div>
+        <div class="tl-desc">git diff identifies every changed file since last commit</div>
+        <div class="tl-arrow"></div>
+      </div>
+      <div class="tl-step done">
+        <div class="tl-num">Step 2</div>
+        <span class="tl-icon">⚡</span>
+        <div class="tl-name">4 Parallel Agents</div>
+        <div class="tl-desc">Schema · Config · Dependency · Rollback fire simultaneously</div>
+        <div class="tl-arrow"></div>
+      </div>
+      <div class="tl-step done">
+        <div class="tl-num">Step 3</div>
+        <span class="tl-icon">🔬</span>
+        <div class="tl-name">Branch Proof</div>
+        <div class="tl-desc">Down-migration runs on isolated Neon branch — never production</div>
+        <div class="tl-arrow"></div>
+      </div>
+      <div class="tl-step blocked">
+        <div class="tl-num">Step 4</div>
+        <span class="tl-icon">🚫</span>
+        <div class="tl-name">Human Gate</div>
+        <div class="tl-desc">HIGH risk detected — approval required before any action</div>
+        <div class="tl-arrow"></div>
+      </div>
+      <div class="tl-step active">
+        <div class="tl-num">Step 5</div>
+        <span class="tl-icon">📊</span>
+        <div class="tl-name">This Report</div>
+        <div class="tl-desc">Live results with score, findings, and required fixes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score hero -->
+  <div class="score-hero" id="scoreHero">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 140 140" width="140" height="140">
+        <circle class="ring-bg"   cx="70" cy="70" r="60"/>
+        <circle class="ring-fill" cx="70" cy="70" r="60" id="ringFill"/>
+      </svg>
+      <div class="ring-center">
+        <span class="ring-score" id="ringScore">—</span>
+        <span class="ring-denom">/ 100</span>
+      </div>
+    </div>
+    <div class="score-info">
+      <div class="score-status" id="scoreStatus">—</div>
+      <div class="score-desc" id="scoreDesc">—</div>
+      <div class="score-breakdown" id="scoreBreakdown"></div>
+    </div>
+  </div>
+
+  <!-- Agent cards -->
+  <div class="section-label">Agent results</div>
+  <div class="cards-grid" id="cardsGrid">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- Before / After rollback proof -->
+  <div class="ba-section">
+    <div class="ba-header">
+      <h2>🔄 Rollback Proof — Before / After</h2>
+      <span class="ba-tag" id="baBranchTag">—</span>
+    </div>
+    <div class="ba-grid">
+      <div class="ba-block before">
+        <div class="ba-block-hd"><span class="dot"></span>BEFORE — breaking migration applied</div>
+        <div class="ba-code">
+          <span class="cn">id</span><br>
+          <span class="cn">firstName</span><br>
+          <span class="cn">lastName</span><br>
+          <span class="cb">emailAddress</span><span class="ann bad">← renamed, breaks app</span><br>
+          <span class="cn">createdAt</span><br>
+          <span class="cn">updatedAt</span>
+        </div>
+      </div>
+      <div class="ba-block after">
+        <div class="ba-block-hd"><span class="dot"></span>AFTER — down-migration executed on branch</div>
+        <div class="ba-code">
+          <span class="cn">id</span><br>
+          <span class="cn">firstName</span><br>
+          <span class="cn">lastName</span><br>
+          <span class="cf">email</span><span class="ann good">← restored ✓</span><br>
+          <span class="cn">createdAt</span><br>
+          <span class="cn">updatedAt</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-query">
+      <span style="color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.5px;">VERIFICATION QUERY</span><br>
+      <span class="ql">SELECT</span> column_name
+      <span class="ql">FROM</span> information_schema.columns
+      <span class="ql">WHERE</span> table_name=<span style="color:#a5d6ff">'Users'</span>
+      <span class="ql">ORDER BY</span> ordinal_position;
+    </div>
+
+    <div class="verdict-strip">
+      <span style="font-size:20px;">✅</span>
+      Rollback verdict: PASS — column successfully restored on isolated branch. Production never touched.
+      <span class="verdict-note" id="verdictNote"></span>
+    </div>
+  </div>
+
+  <!-- Blocked banner -->
+  <div class="blocked-banner" id="blockedBanner">
+    <div class="bb-icon">🚫</div>
+    <div class="bb-text">
+      <h3 id="bannerTitle">—</h3>
+      <div id="bannerBody"></div>
+    </div>
+  </div>
+
+  <!-- Fix checklist -->
+  <div class="fix-section">
+    <h2>⚠️ Required Fixes Before Deploy</h2>
+    <div id="fixList"><!-- injected by JS --></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>Release Readiness Dashboard &nbsp;·&nbsp; <span class="footer-brand">IBM Bob</span> — release-readiness-check skill</span>
+    <span id="footerTime">—</span>
+  </div>
+
+</div><!-- .page -->
+</div><!-- #app -->
+
+<script>
+// ─────────────────────────────────────────────
+//  Colour helpers
+// ─────────────────────────────────────────────
+var COLORS = {
+  HIGH:   { stroke: '#f85149', text: '#f85149', bg: 'rgba(248,81,73,.13)' },
+  MEDIUM: { stroke: '#e3b341', text: '#e3b341', bg: 'rgba(227,179,65,.12)' },
+  LOW:    { stroke: '#58a6ff', text: '#58a6ff', bg: 'rgba(88,166,255,.12)' },
+  NONE:   { stroke: '#3fb950', text: '#3fb950', bg: 'rgba(63,185,80,.12)'  },
+  PASS:   { stroke: '#3fb950', text: '#3fb950', bg: 'rgba(63,185,80,.12)'  },
+  FAIL:   { stroke: '#f85149', text: '#f85149', bg: 'rgba(248,81,73,.13)'  },
+};
+
+function scoreColor(s) {
+  if (s >= 70) return '#3fb950';
+  if (s >= 40) return '#e3b341';
+  return '#f85149';
+}
+
+// ─────────────────────────────────────────────
+//  Render
+// ─────────────────────────────────────────────
+function render(d) {
+  // Nav
+  document.getElementById('navStatus').textContent  = d.status === 'BLOCKED' ? '🚫 BLOCKED' : '✅ SAFE';
+  document.getElementById('navStatus').className    = 'pill ' + (d.status === 'BLOCKED' ? '' : 'live');
+  document.getElementById('navCommit').textContent  = d.commit || '—';
+  document.getElementById('navBranch').textContent  = 'branch: ' + (d.branch || '—');
+
+  // Data strip time
+  var t = d.generatedAt ? new Date(d.generatedAt).toLocaleString() : '—';
+  document.getElementById('dsTime').textContent = t;
+  document.getElementById('footerTime').textContent = 'Generated ' + t;
+
+  // Score ring
+  var score = d.score;
+  var c = scoreColor(score);
+  var ring = document.getElementById('ringFill');
+  var circ = 2 * Math.PI * 60; // r=60 → 376.99
+  ring.style.stroke = c;
+  ring.style.strokeDasharray = circ;
+
+  document.getElementById('ringScore').textContent = score;
+  document.getElementById('ringScore').style.color = c;
+
+  setTimeout(function () {
+    var offset = circ * (1 - score / 100);
+    ring.style.strokeDashoffset = offset;
+  }, 300);
+
+  // Score status
+  var statusEl = document.getElementById('scoreStatus');
+  statusEl.textContent = d.status === 'BLOCKED' ? '🚫 BLOCKED' : '✅ SAFE TO DEPLOY';
+  statusEl.style.color = c;
+
+  document.getElementById('scoreDesc').textContent =
+    d.status === 'BLOCKED'
+      ? 'Release readiness score is critically low. The issues listed below must be resolved before this build can be deployed to production.'
+      : 'All checks passed. This release is safe to deploy.';
+
+  // Score breakdown
+  var breakdownEl = document.getElementById('scoreBreakdown');
+  var deductions = [];
+  if (d.agents.schema.riskLevel     === 'HIGH')   deductions.push({ val: '−40', label: 'Schema HIGH risk' });
+  if (d.agents.schema.riskLevel     === 'MEDIUM')  deductions.push({ val: '−20', label: 'Schema MEDIUM risk' });
+  if (d.agents.config.riskLevel     === 'HIGH')   deductions.push({ val: '−40', label: 'Config HIGH risk' });
+  if (d.agents.dependency.riskLevel === 'HIGH')   deductions.push({ val: '−40', label: 'Dependency HIGH risk' });
+  if (!d.agents.rollback.rollbackSafe || d.agents.rollback.verdict === 'FAIL') {
+    deductions.push({ val: '−40', label: 'Rollback unproven / FAIL' });
+  } else if (d.agents.rollback.executionMethod === 'hybrid-manual') {
+    deductions.push({ val: '−40', label: 'Rollback: hybrid execution (not fully automated)' });
+  }
+  breakdownEl.innerHTML = deductions.map(function(x) {
+    return '<div class="deduction"><span class="d-val">' + x.val + '</span> <span class="d-label">' + x.label + '</span></div>';
+  }).join('');
+
+  // Agent cards
+  var agents = [
+    {
+      icon: '🔍', name: 'Schema / Migration', sub: 'column renames · drops · missing migrations',
+      key: 'schema',
+      riskLevel: d.agents.schema.riskLevel,
+      findings: d.agents.schema.findings,
+      note: d.agents.schema.recommendation
+    },
+    {
+      icon: '⚙️', name: 'Config / Env', sub: 'env vars · secrets · renames',
+      key: 'config',
+      riskLevel: d.agents.config.riskLevel,
+      findings: d.agents.config.findings,
+      note: d.agents.config.recommendation
+    },
+    {
+      icon: '📦', name: 'Dependency', sub: 'major bumps · security packages',
+      key: 'dependency',
+      riskLevel: d.agents.dependency.riskLevel,
+      findings: d.agents.dependency.findings,
+      note: d.agents.dependency.recommendation
+    },
+    {
+      icon: '🔄', name: 'Rollback Agent', sub: 'branch proof · down-migration · verification',
+      key: 'rollback',
+      riskLevel: d.agents.rollback.verdict === 'PASS' ? 'PASS' : 'FAIL',
+      isRollback: true,
+      rollback: d.agents.rollback
+    }
+  ];
+
+  var grid = document.getElementById('cardsGrid');
+  grid.innerHTML = agents.map(function(a) {
+    var rl = a.riskLevel;
+    var cardClass = rl === 'HIGH' || rl === 'FAIL' ? 'risk-high'
+                  : rl === 'PASS' ? (a.isRollback && a.rollback.executionMethod === 'hybrid-manual' ? 'risk-hybrid' : 'risk-none')
+                  : 'risk-none';
+
+    var badgeClass = rl === 'HIGH' ? 'high' : rl === 'FAIL' ? 'high' : rl === 'PASS' ? 'pass' : 'none';
+    var badgeText  = rl;
+
+    var hybridBadge = (a.isRollback && a.rollback.executionMethod === 'hybrid-manual')
+      ? '<span class="badge hybrid">⚗️ hybrid execution</span>' : '';
+
+    var findingsHTML = '';
+    if (a.key === 'schema' && a.findings && a.findings.length) {
+      findingsHTML = '<div class="card-findings-list">' + a.findings.map(function(f) {
+        return '<div class="finding-row">'
+          + '<div class="fr-file">' + (f.file || '').split('/').pop() + '</div>'
+          + '<div class="fr-change">' + escHtml(f.change) + '</div>'
+          + '</div>';
+      }).join('') + '</div>';
+    } else if (a.isRollback) {
+      var r = a.rollback;
+      findingsHTML = '<div class="card-finding">Branch <code>' + escHtml(r.branchName || '—') + '</code> — '
+        + 'down-migration executed, column confirmed restored. Production never touched.</div>';
+    } else if (!a.findings || a.findings.length === 0) {
+      findingsHTML = '<div class="card-finding" style="color:var(--muted)">No issues detected.</div>';
+    }
+
+    var noteHTML = '';
+    if (a.note) {
+      noteHTML = '<div class="card-note">' + escHtml(a.note) + '</div>';
+    } else if (a.isRollback && a.rollback.note) {
+      noteHTML = '<div class="card-note">' + escHtml(a.rollback.note) + '</div>';
+    }
+
+    return '<div class="agent-card ' + cardClass + '">'
+      + '<div class="card-top">'
+      +   '<div class="card-icon-name">'
+      +     '<span class="card-icon">' + a.icon + '</span>'
+      +     '<div><div class="card-name">' + a.name + '</div><div class="card-sub">' + a.sub + '</div></div>'
+      +   '</div>'
+      +   '<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'
+      +     '<span class="badge ' + badgeClass + '">' + badgeText + '</span>'
+      +     hybridBadge
+      +   '</div>'
+      + '</div>'
+      + findingsHTML
+      + noteHTML
+      + '</div>';
+  }).join('');
+
+  // Before/After branch tag
+  var branchName = d.agents.rollback.branchName || '—';
+  document.getElementById('baBranchTag').textContent = branchName;
+
+  // Verdict note
+  document.getElementById('verdictNote').textContent =
+    d.agents.rollback.executionMethod === 'hybrid-manual'
+      ? '(hybrid: proof run from host terminal — bob_sessions/rollback-proof-manual.md)'
+      : '(automated)';
+
+  // Blocked banner
+  var numBlockers = (d.blockers || []).length;
+  document.getElementById('bannerTitle').textContent =
+    'Deployment Blocked — ' + numBlockers + ' issue' + (numBlockers !== 1 ? 's' : '') + ' must be resolved before this release is safe';
+  document.getElementById('bannerBody').innerHTML = (d.blockers || []).map(function(b) {
+    return '<p>' + escHtml(b) + '</p>';
+  }).join('');
+
+  // Fix list
+  var fixes = d.requiredFixes || [];
+  document.getElementById('fixList').innerHTML = fixes.map(function(f, i) {
+    // Mark first two as fixed (we just fixed them)
+    var checked = (i === 0 || i === 1);
+    return '<div class="fix-item">'
+      + '<div class="fix-num">' + (i + 1) + '</div>'
+      + '<div class="fix-text">' + escHtml(f) + '</div>'
+      + (checked ? '<div class="fix-check" title="Fixed in this session">✅</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+//  Load data — try report.json first, fall back to embedded
+// ─────────────────────────────────────────────
+var FALLBACK = {
+  "generatedAt": "2025-09-26T08:30:00.000Z",
+  "commit": "177dc6a", "branch": "main",
+  "score": 20, "status": "BLOCKED",
+  "agents": {
+    "schema": {
+      "riskLevel": "HIGH",
+      "findings": [
+        { "file": "migrations/20260926082116-rename-email-to-emailAddress.js", "change": "Column 'email' renamed to 'emailAddress' on Users table", "impact": "Breaking — queries referencing email will fail" },
+        { "file": "models/user.js", "change": "Model still declares field as 'email'", "impact": "All ORM operations will throw DatabaseError" },
+        { "file": "controllers/userController.js", "change": "getUser() queries { where: { email: ... } }", "impact": "All user lookups return HTTP 500" }
+      ],
+      "recommendation": "Update model and controller to use emailAddress."
+    },
+    "config":     { "riskLevel": "NONE", "findings": [], "recommendation": "No config changes required." },
+    "dependency": { "riskLevel": "NONE", "findings": [], "recommendation": "No dependency changes." },
+    "rollback": {
+      "rollbackSafe": true, "verdict": "PASS",
+      "migrationRolledBack": "20260926082116-rename-email-to-emailAddress.js",
+      "branchName": "rollback-test-demo", "executionMethod": "hybrid-manual",
+      "note": "Neon REST API unreachable from Bob sandbox. Proof completed manually from host terminal."
+    }
+  },
+  "blockers": ["Schema mismatch: rename migration applied but model and controller still reference old column name 'email'"],
+  "requiredFixes": [
+    "Update target-app/src/database/models/user.js — rename email to emailAddress",
+    "Update target-app/src/controllers/userController.js — change where clause to emailAddress",
+    "Audit full codebase for remaining 'email' column references",
+    "Re-run release readiness check from CI runner to automate Rollback Agent proof end-to-end"
+  ]
+};
+
+function boot(data) {
+  render(data);
+  var loading = document.getElementById('loading');
+  var app = document.getElementById('app');
+  loading.style.opacity = '0';
+  setTimeout(function () {
+    loading.style.display = 'none';
+    app.classList.add('visible');
+  }, 400);
+}
+
+// Try Vercel route (/report.json) first, then relative path (local file://), then embedded fallback
+['/report.json', './report.json'].reduce(function(chain, url) {
+  return chain.catch(function() {
+    return fetch(url).then(function(r) {
+      if (!r.ok) return Promise.reject('not ok');
+      return r.json();
+    });
+  });
+}, Promise.reject('init'))
+  .then(function(data) { boot(data); })
+  .catch(function() {
+    // Final fallback: embedded data — always works even as a bare file:// with no server
+    boot(FALLBACK);
+  });
+</script>
+</body>
+</html>

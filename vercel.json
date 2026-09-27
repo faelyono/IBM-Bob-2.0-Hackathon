@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "bob_sessions/release-readiness-dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "bob_sessions/report.json",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/bob_sessions/release-readiness-dashboard.html"
+    },
+    {
+      "src": "/report.json",
+      "dest": "/bob_sessions/report.json"
+    },
+    {
+      "src": "/dashboard",
+      "dest": "/bob_sessions/release-readiness-dashboard.html"
+    }
+  ]
+}
