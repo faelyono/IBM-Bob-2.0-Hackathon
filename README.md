@@ -24,11 +24,6 @@ IBM Bob was instrumental in turning a complex DevOps concept into a tangible, in
 
 ## 📸 Code Repository & Task Session Summary Screenshots
 
-As per the hackathon requirements, screenshots of **IBM Bob task session summaries** for each team member are required to verify our usage of the tool.
-
-> **⚠️ NOTE FOR TEAM MEMBERS:** 
-> Please ensure you upload your IBM Bob Task Session Summary screenshots (e.g., `screenshot_member1.png`, `screenshot_member2.png`) directly into the `bob_sessions/` folder or the root of this repository before final submission!
-
 - **Location:** Please see the `bob_sessions/` directory (or the root directory) in this repository to view the screenshot evidence.
 
 ---
