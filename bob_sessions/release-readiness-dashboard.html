@@ -177,6 +177,63 @@
             transition: opacity 0.5s ease;
         }
 
+        /* Landing Form */
+        .landing-form {
+            margin-top: 32px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .repo-input {
+            width: 400px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            color: var(--text-heading);
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            outline: none;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+
+        .repo-input::placeholder {
+            color: rgba(29, 29, 31, 0.5);
+        }
+
+        .repo-input:focus {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(29, 29, 31, 0.3);
+            box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.2);
+        }
+
+        .scan-btn {
+            padding: 16px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(135deg, var(--orb-cyan), var(--orb-violet));
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 16px rgba(138, 43, 226, 0.3);
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(138, 43, 226, 0.4);
+        }
+        
+        .scan-btn:active {
+            transform: translateY(0);
+        }
+
         /* State 2: Dashboard */
         #dashboard-state {
             display: none;
@@ -488,12 +545,16 @@
 
     <!-- State 1: Landing -->
     <div id="landing-state">
-        <div class="logo-container" id="init-btn">
+        <div class="logo-container">
             <svg class="logo-svg" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
             <h1 class="logo-title">Bob Release Guard</h1>
-            <p class="logo-subtitle">Click to Initialize</p>
+            <p class="logo-subtitle" style="text-transform: none; letter-spacing: normal; opacity: 0.8;">Enter your repository URL to run a deep AI release readiness check.</p>
+        </div>
+        <div class="landing-form" id="landing-form">
+            <input type="text" id="repo-input" class="repo-input" placeholder="https://github.com/your-org/your-repo">
+            <button id="scan-btn" class="scan-btn">Scan Repo</button>
         </div>
         <div id="loading-text">Initializing AI Subroutines...</div>
     </div>
@@ -690,19 +751,32 @@
         }
 
         // Interaction Logic
-        document.getElementById('init-btn').addEventListener('click', async () => {
+        const scanBtn = document.getElementById('scan-btn');
+        const repoInput = document.getElementById('repo-input');
+        
+        async function initiateScan() {
+            if (!repoInput.value.trim()) return;
+
             const landing = document.getElementById('landing-state');
             const dashboard = document.getElementById('dashboard-state');
             const loadingText = document.getElementById('loading-text');
+            const landingForm = document.getElementById('landing-form');
             const subtitle = document.querySelector('.logo-subtitle');
 
-            subtitle.style.display = 'none';
-            loadingText.style.opacity = '1';
+            subtitle.style.opacity = '0';
+            landingForm.style.opacity = '0';
+            
+            setTimeout(() => {
+                subtitle.style.display = 'none';
+                landingForm.style.display = 'none';
+                loadingText.style.opacity = '1';
+            }, 500);
 
             // Load data during transition
             await loadData();
             renderDashboard();
 
+            // Wait ~1.5s to simulate scanning
             setTimeout(() => {
                 landing.style.opacity = '0';
                 landing.style.transform = 'scale(0.9)';
@@ -717,7 +791,12 @@
                     dashboard.style.opacity = '1';
                     dashboard.style.transform = 'translateY(0)';
                 }, 800);
-            }, 1000);
+            }, 1500);
+        }
+
+        scanBtn.addEventListener('click', initiateScan);
+        repoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') initiateScan();
         });
 
     </script>
