@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bob Release Guard - Command Center</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <title>Bob Release Guard - Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0D0D12;
-            --surface: #17181F;
-            --surface-hover: #22232D;
-            --border: #2E2F3E;
-            --text-primary: #FFFFFF;
-            --text-secondary: #8B8C9A;
-            --accent: #E58A3E;
-            --accent-glow: rgba(229, 138, 62, 0.2);
-            --critical: #F43F5E;
-            --warning: #F59E0B;
-            --passed: #10B981;
+            --bg: #f8f9fa;
+            --text-heading: #1d1d1f;
+            --text-body: #515154;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px rgba(0,0,0,0.05);
+            
+            --orb-cyan: #00f2fe;
+            --orb-magenta: #fe0979;
+            --orb-violet: #8a2be2;
+
+            --danger: #ff4b4b;
+            --danger-bg: rgba(255, 75, 75, 0.1);
+            --success: #34c759;
+            --success-bg: rgba(52, 199, 89, 0.1);
+            --warning: #ff9f0a;
+            --warning-bg: rgba(255, 159, 10, 0.1);
         }
 
         * {
@@ -30,736 +33,690 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            line-height: 1.5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-body);
             min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            color: var(--text-heading);
+            font-weight: 600;
+        }
+
+        /* Holographic Orbs */
+        .orb-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.6;
+            animation: drift 20s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--orb-cyan);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--orb-magenta);
+            bottom: -50px;
+            right: 10%;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 700px;
+            height: 700px;
+            background: var(--orb-violet);
+            top: 40%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 50px) scale(1.1); }
+            100% { transform: translate(-50px, 100px) scale(0.9); }
+        }
+
+        /* Glassmorphism Utility */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+        }
+
+        /* State 1: Landing */
+        #landing-state {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
-        }
-
-        /* HEADER */
-        header {
-            position: sticky;
-            top: 0;
+            align-items: center;
+            justify-content: center;
             z-index: 100;
-            background: rgba(13, 13, 18, 0.7);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .logo-container {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .logo-container:hover {
+            transform: scale(1.05);
         }
 
-        .logo-icon {
-            width: 24px;
-            height: 24px;
+        .logo-svg {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 24px;
+            animation: pulse 3s infinite ease-in-out;
             fill: none;
-            stroke: var(--accent);
+            stroke: var(--text-heading);
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
         }
 
-        .title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
+        .logo-title {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
         }
 
-        .status-pill {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
+        .logo-subtitle {
+            font-size: 1rem;
+            opacity: 0.7;
             text-transform: uppercase;
-            border: 1px solid var(--critical);
-            color: var(--critical);
-            background: rgba(244, 63, 94, 0.1);
-            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--critical);
-            animation: pulse 2s infinite;
+            letter-spacing: 2px;
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        /* MAIN LAYOUT */
-        main {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1440px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        @media (max-width: 1024px) {
-            main {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* LEFT COLUMN - TERMINAL */
-        .terminal-container {
-            background: #000;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-        }
-
-        .terminal-header {
-            background: var(--surface);
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .terminal-dots {
-            display: flex;
-            gap: 6px;
-            margin-right: 16px;
-        }
-
-        .terminal-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #333;
-        }
-
-        .terminal-body {
-            padding: 1.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #A0A0B0;
-            flex: 1;
-            overflow-y: auto;
-            max-height: calc(100vh - 150px);
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .log-line {
+        #loading-text {
+            margin-top: 40px;
+            font-size: 1.1rem;
             opacity: 0;
-            transform: translateY(5px);
-            animation: fadeInLog 0.2s forwards;
-            word-break: break-word;
-        }
-        
-        @keyframes fadeInLog {
-            to { opacity: 1; transform: translateY(0); }
+            transition: opacity 0.5s ease;
         }
 
-        .log-prefix { color: #8B8C9A; }
-        .log-agent { color: #60A5FA; }
-        .log-warn { color: var(--warning); }
-        .log-error { color: var(--critical); }
-        .log-success { color: var(--passed); }
-        .log-accent { color: var(--accent); }
-        
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 15px;
-            background: var(--accent);
-            animation: blink 1s step-end infinite;
-            vertical-align: middle;
-            margin-left: 4px;
+        /* State 2: Dashboard */
+        #dashboard-state {
+            display: none;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
         }
 
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* RIGHT COLUMN - DASHBOARD */
-        .dashboard-col {
+        /* Navbar */
+        .navbar {
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            border-radius: 100px;
         }
 
-        .section-title {
-            font-size: 0.875rem;
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+            color: var(--text-heading);
         }
 
-        /* THREAT METER */
-        .threat-meter {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-        
-        .threat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 1rem;
-        }
-
-        .threat-score {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--critical);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .segments {
-            display: flex;
-            gap: 4px;
-            height: 12px;
-        }
-
-        .segment {
-            flex: 1;
-            border-radius: 2px;
-            background: #2E2F3E;
-            transition: background 0.5s ease;
-        }
-
-        .segment.active-passed { background: var(--passed); }
-        .segment.active-warning { background: var(--warning); }
-        .segment.active-critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
-
-        /* AGENT CARDS */
-        .agent-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-
-        .agent-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            cursor: pointer;
-        }
-        
-        .agent-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .agent-card.critical { border-left: 4px solid var(--critical); }
-        .agent-card.warning { border-left: 4px solid var(--warning); }
-        .agent-card.passed { border-left: 4px solid var(--passed); }
-
-        .agent-header {
-            padding: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-
-        .agent-name-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .agent-icon {
-            width: 20px;
-            height: 20px;
+        .nav-brand svg {
+            width: 32px;
+            height: 32px;
             fill: none;
-            stroke: currentColor;
+            stroke: var(--text-heading);
             stroke-width: 2;
         }
 
-        .agent-name {
-            font-weight: 600;
-            font-size: 0.95rem;
+        .nav-meta {
+            display: flex;
+            gap: 12px;
         }
 
-        .agent-status {
+        .pill {
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Main Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Hero / Score Section */
+        .hero-section {
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .score-ring {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .score-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .score-bg {
+            fill: none;
+            stroke: rgba(0,0,0,0.05);
+            stroke-width: 8;
+        }
+
+        .score-progress {
+            fill: none;
+            stroke: var(--success);
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 565.48; /* 2 * pi * r (90) */
+            stroke-dashoffset: 565.48;
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-text-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 100px;
+            display: inline-block;
+        }
+        
+        .status-BLOCKED {
+            color: var(--danger);
+            background: var(--danger-bg);
+        }
+        
+        .status-SAFE {
+            color: var(--success);
+            background: var(--success-bg);
+        }
+
+        /* Agents Matrix */
+        .agents-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .agent-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .agent-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .risk-badge {
             font-size: 0.75rem;
             font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 100px;
             text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 4px;
-            background: rgba(255,255,255,0.05);
         }
 
-        .agent-card.critical .agent-status { color: var(--critical); background: rgba(244, 63, 94, 0.1); }
-        .agent-card.warning .agent-status { color: var(--warning); background: rgba(245, 158, 11, 0.1); }
-        .agent-card.passed .agent-status { color: var(--passed); background: rgba(16, 185, 129, 0.1); }
+        .risk-HIGH { background: var(--danger-bg); color: var(--danger); }
+        .risk-MEDIUM { background: var(--warning-bg); color: var(--warning); }
+        .risk-NONE, .risk-LOW { background: var(--success-bg); color: var(--success); }
 
-        .agent-content {
-            padding: 0 1rem;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-            background: rgba(0,0,0,0.2);
-            border-top: 1px solid transparent;
+        .agent-body {
+            font-size: 0.9rem;
+            flex-grow: 1;
         }
 
-        .agent-card.expanded .agent-content {
-            padding: 1rem;
-            max-height: 500px;
-            opacity: 1;
-            border-top-color: var(--border);
+        .finding-item {
+            padding: 12px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0,0,0,0.03);
         }
 
-        .findings-list {
-            list-style: none;
-            margin-bottom: 1rem;
-            font-size: 0.85rem;
-            color: #D1D5DB;
-        }
-        .findings-list li {
-            position: relative;
-            padding-left: 16px;
-            margin-bottom: 6px;
-        }
-        .findings-list li::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--text-secondary);
+        .finding-item strong {
+            display: block;
+            color: var(--text-heading);
+            margin-bottom: 4px;
         }
 
         .recommendation {
-            background: rgba(229, 138, 62, 0.05);
-            border-left: 2px solid var(--accent);
-            padding: 12px;
-            font-size: 0.85rem;
-            color: #E2E8F0;
-            border-radius: 0 4px 4px 0;
-        }
-        .rec-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            color: var(--accent);
-            font-weight: 700;
-            margin-bottom: 4px;
-            display: block;
+            margin-top: 12px;
+            font-style: italic;
+            color: var(--text-heading);
         }
 
-        /* ROLLBACK PROOF */
-        .rollback-proof {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .code-split {
+        /* Bottom Grid */
+        .bottom-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background: var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 0.5rem;
+            gap: 24px;
         }
 
-        .code-panel {
-            background: #000;
-            padding: 1rem;
-        }
-        .code-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
+        /* Generic Panel */
+        .panel {
+            padding: 24px;
         }
         
-        .code-block {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: #A0A0B0;
-            white-space: pre-wrap;
+        .panel-title {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        /* REQUIRED FIXES */
-        .required-fixes {
-            background: var(--surface);
-            border: 1px solid var(--accent);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 0 20px var(--accent-glow);
+        /* Rollback Panel */
+        .code-window {
+            background: #1d1d1f;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
         }
 
+        .code-header {
+            background: #2d2d2f;
+            padding: 12px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .mac-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .code-content {
+            padding: 16px;
+            color: #a9b7c6;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .code-keyword { color: #cc7832; }
+        .code-string { color: #6a8759; }
+        
+        /* Checklist */
         .checklist {
             list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
         }
-
+        
         .check-item {
             display: flex;
-            gap: 12px;
             align-items: flex-start;
-            font-size: 0.9rem;
-            background: rgba(255,255,255,0.03);
-            padding: 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(255,255,255,0.05);
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
-
-        .check-box {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--accent);
-            border-radius: 4px;
+        
+        .check-item:last-child {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            color: var(--danger);
             flex-shrink: 0;
             margin-top: 2px;
         }
 
-        /* Utils */
-        .hidden { display: none !important; }
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 600px) {
+            .agents-matrix { grid-template-columns: 1fr; }
+            .navbar { flex-direction: column; gap: 16px; border-radius: 24px; }
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo-area">
-            <svg class="logo-icon" viewBox="0 0 24 24">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    <!-- Holographic Background -->
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- State 1: Landing -->
+    <div id="landing-state">
+        <div class="logo-container" id="init-btn">
+            <svg class="logo-svg" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             </svg>
-            <div class="title">Bob Release Guard</div>
+            <h1 class="logo-title">Bob Release Guard</h1>
+            <p class="logo-subtitle">Click to Initialize</p>
         </div>
-        <div class="status-pill" id="globalStatus">
-            <div class="status-dot"></div>
-            <span id="globalStatusText">ANALYZING...</span>
-        </div>
-    </header>
+        <div id="loading-text">Initializing AI Subroutines...</div>
+    </div>
 
-    <main>
-        <!-- LEFT: Terminal -->
-        <div class="terminal-container">
-            <div class="terminal-header">
-                <div class="terminal-dots">
-                    <div class="terminal-dot" style="background:#FF5F56;"></div>
-                    <div class="terminal-dot" style="background:#FFBD2E;"></div>
-                    <div class="terminal-dot" style="background:#27C93F;"></div>
-                </div>
-                agent_terminal_sys.sh
+    <!-- State 2: Dashboard -->
+    <div id="dashboard-state">
+        <nav class="navbar glass">
+            <div class="nav-brand">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Bob Release Guard
             </div>
-            <div class="terminal-body" id="terminalOutput">
-                <!-- Logs will be injected here -->
+            <div class="nav-meta" id="nav-meta">
+                <!-- Pills injected by JS -->
             </div>
-        </div>
+        </nav>
 
-        <!-- RIGHT: Dashboard -->
-        <div class="dashboard-col">
-            
-            <!-- Threat Meter -->
-            <div class="threat-meter">
-                <div class="threat-header">
-                    <div class="section-title" style="margin:0;">Deployment Risk Level</div>
-                    <div class="threat-score" id="riskScoreVal">0</div>
-                </div>
-                <div class="segments" id="threatSegments">
-                    <!-- 20 segments generated by JS -->
-                </div>
-            </div>
-
-            <!-- Agent Matrix -->
-            <div>
-                <div class="section-title">Agent Analysis Matrix</div>
-                <div class="agent-grid" id="agentMatrix">
-                    <!-- Cards generated by JS -->
-                </div>
-            </div>
-
-            <!-- Rollback Proof -->
-            <div class="rollback-proof" id="rollbackProofSection" style="display:none;">
-                <div class="section-title">Rollback Simulation Proof</div>
-                <div class="code-split">
-                    <div class="code-panel">
-                        <div class="code-label">Before Migration</div>
-                        <div class="code-block" id="rbBefore"></div>
+        <div class="dashboard-grid">
+            <!-- Hero Score -->
+            <div class="glass hero-section">
+                <div class="score-ring">
+                    <svg viewBox="0 0 200 200">
+                        <circle class="score-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="score-progress" id="score-circle" cx="100" cy="100" r="90"></circle>
+                    </svg>
+                    <div class="score-text-container">
+                        <div class="score-value" id="score-value">0</div>
+                        <div class="score-label">Score</div>
                     </div>
-                    <div class="code-panel">
-                        <div class="code-label">Failed Rollback State</div>
-                        <div class="code-block" id="rbAfter"></div>
+                </div>
+                <div id="main-status" class="status-badge">Loading...</div>
+            </div>
+
+            <!-- Agents Matrix -->
+            <div class="agents-matrix" id="agents-matrix">
+                <!-- Cards injected by JS -->
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <!-- Rollback Proof -->
+            <div class="glass panel">
+                <h2 class="panel-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Rollback Simulation
+                </h2>
+                <div class="code-window">
+                    <div class="code-header">
+                        <div class="mac-dot dot-red"></div>
+                        <div class="mac-dot dot-yellow"></div>
+                        <div class="mac-dot dot-green"></div>
+                    </div>
+                    <div class="code-content" id="rollback-content">
+                        <!-- Code injected by JS -->
                     </div>
                 </div>
             </div>
 
             <!-- Required Fixes -->
-            <div class="required-fixes" id="fixesSection" style="display:none;">
-                <div class="section-title" style="color: var(--accent);">Required Actions to Unblock</div>
-                <ul class="checklist" id="fixesList">
+            <div class="glass panel">
+                <h2 class="panel-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                    Required Fixes
+                </h2>
+                <ul class="checklist" id="fixes-list">
                     <!-- Fixes injected by JS -->
                 </ul>
             </div>
-
         </div>
-    </main>
+    </div>
 
     <script>
         const FALLBACK_DATA = {
-            "dashboard_id": "dash_7f9b8c2a4e1d",
-            "status": "blocked",
-            "deployment_risk_score": 85,
-            "timestamp": "2024-05-18T14:32:00Z",
-            "target_environment": "production",
-            "agents": [
-                {
-                    "name": "SchemaAgent",
-                    "status": "critical",
-                    "findings": [
-                        "Detected dropping of column 'legacy_user_id' in 'users' table.",
-                        "High risk of data loss if deployed before application code is updated."
-                    ],
-                    "recommendation": "Use a multi-phase migration: 1. Add new column. 2. Dual-write. 3. Stop reading old. 4. Drop old column."
-                },
-                {
-                    "name": "ConfigAgent",
-                    "status": "warning",
-                    "findings": [
-                        "Environment variable 'STRIPE_API_KEY' is missing in the production configuration."
-                    ],
-                    "recommendation": "Ensure 'STRIPE_API_KEY' is injected via Secrets Manager before deployment."
-                },
-                {
-                    "name": "DependencyAgent",
-                    "status": "passed",
-                    "findings": [
-                        "All microservice dependencies (AuthService v1.2, PaymentService v2.0) are compatible."
-                    ],
-                    "recommendation": "No action required."
-                },
-                {
-                    "name": "RollbackAgent",
-                    "status": "critical",
-                    "findings": [
-                        "Tested automatic rollback script failed.",
-                        "Cannot reverse 'DROP COLUMN legacy_user_id' without explicit data restoration strategy."
-                    ],
-                    "recommendation": "Provide a manual rollback SQL script or avoid dropping the column."
-                }
-            ],
-            "actionable_fixes": [
-                "Revert the 'DROP COLUMN legacy_user_id' migration and replace with a deprecation phase.",
-                "Add 'STRIPE_API_KEY' to the production secrets vault.",
-                "Provide a valid down-migration script for the schema changes."
-            ],
-            "rollback_proof": {
-                "before": "-- Current State\nCREATE TABLE users (\n  id UUID PRIMARY KEY,\n  email VARCHAR(255),\n  legacy_user_id INT\n);",
-                "after": "-- Attempted Rollback State (FAILED)\nALTER TABLE users ADD COLUMN legacy_user_id INT;\n-- Data from legacy_user_id is permanently lost."
-            }
+            "generatedAt": "2025-09-26T08:30:00.000Z",
+            "commit": "177dc6a", "branch": "main", "score": 20, "status": "BLOCKED",
+            "agents": {
+                "schema": { "riskLevel": "HIGH", "findings": [ { "file": "user.js", "change": "renamed email", "impact": "breaking" } ], "recommendation": "Fix it" },
+                "config": { "riskLevel": "NONE", "findings": [], "recommendation": "All good" },
+                "dependency": { "riskLevel": "NONE", "findings": [], "recommendation": "All good" },
+                "rollback": { "rollbackSafe": true, "verdict": "PASS", "executionMethod": "hybrid-manual", "branchName": "rollback-test", "verificationQuery": "SELECT *", "verificationOutput": "ok", "note": "manual proof" }
+            },
+            "blockers": ["Schema mismatch"],
+            "requiredFixes": ["Update target-app/src/database/models/user.js", "Update controller"]
         };
 
-        const ICONS = {
-            'SchemaAgent': '<path d="M4 7V4h16v3M4 7v10c0 1.66 3.58 3 8 3s8-1.34 8-3V7M4 7c0 1.66 3.58 3 8 3s8-1.34 8-3"></path>',
-            'ConfigAgent': '<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>',
-            'DependencyAgent': '<path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>',
-            'RollbackAgent': '<path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>'
-        };
+        let reportData = null;
 
         async function loadData() {
             try {
-                let res = await fetch('/report.json');
-                if (!res.ok) throw new Error();
-                return await res.json();
-            } catch {
+                const res = await fetch('/report.json');
+                if (!res.ok) throw new Error('Not found');
+                reportData = await res.json();
+            } catch (e1) {
                 try {
-                    let res = await fetch('./report.json');
-                    if (!res.ok) throw new Error();
-                    return await res.json();
-                } catch {
-                    return FALLBACK_DATA;
+                    const res2 = await fetch('./report.json');
+                    if (!res2.ok) throw new Error('Not found');
+                    reportData = await res2.json();
+                } catch (e2) {
+                    console.log("Using fallback data");
+                    reportData = FALLBACK_DATA;
                 }
             }
         }
 
-        const terminalOutput = document.getElementById('terminalOutput');
-        let cursorNode = document.createElement('span');
-        cursorNode.className = 'cursor';
-        
-        function addTerminalLine(htmlContent, delay) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    const div = document.createElement('div');
-                    div.className = 'log-line';
-                    div.innerHTML = `<span class="log-prefix">></span> ${htmlContent}`;
-                    
-                    if(cursorNode.parentNode) {
-                        terminalOutput.removeChild(cursorNode);
-                    }
-                    terminalOutput.appendChild(div);
-                    terminalOutput.appendChild(cursorNode);
-                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-                    
-                    resolve();
-                }, delay);
-            });
+        function getAgentIcon(name) {
+            const icons = {
+                'schema': '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>',
+                'config': '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>',
+                'dependency': '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>',
+                'rollback': '<path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path>'
+            };
+            return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icons[name.toLowerCase()] || ''}</svg>`;
         }
 
-        async function simulateTerminal(data) {
-            await addTerminalLine(`Initializing Bob Release Guard System...`, 500);
-            await addTerminalLine(`Target Environment: <span class="log-accent">${data.target_environment}</span>`, 400);
-            await addTerminalLine(`Loading multi-agent subroutines...`, 600);
+        function renderDashboard() {
+            // Navbar
+            document.getElementById('nav-meta').innerHTML = `
+                <div class="pill">Commit: ${reportData.commit.substring(0,7)}</div>
+                <div class="pill">Branch: ${reportData.branch}</div>
+            `;
+
+            // Score & Status
+            document.getElementById('score-value').innerText = reportData.score;
+            const scoreCircle = document.getElementById('score-circle');
+            const circumference = 565.48;
+            const offset = circumference - (reportData.score / 100) * circumference;
             
-            for (let agent of data.agents) {
-                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] Waking up and starting analysis...`, 800);
-                
-                let findingsSummary = agent.findings[0] || 'Analyzing vectors...';
-                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] ${findingsSummary}`, 1200);
-                
-                let statusClass = 'log-success';
-                let statusText = 'OK';
-                if(agent.status === 'warning') { statusClass = 'log-warn'; statusText = 'WARN'; }
-                else if(agent.status === 'critical') { statusClass = 'log-error'; statusText = 'CRITICAL'; }
-                
-                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] Result: <span class="${statusClass}">${statusText}</span>`, 600);
-            }
+            // Set initial offset for animation
+            setTimeout(() => {
+                scoreCircle.style.strokeDashoffset = offset;
+                if(reportData.score < 50) scoreCircle.style.stroke = 'var(--danger)';
+                else if (reportData.score < 80) scoreCircle.style.stroke = 'var(--warning)';
+                else scoreCircle.style.stroke = 'var(--success)';
+            }, 500);
 
-            await addTerminalLine(`<br>`, 200);
-            await addTerminalLine(`Calculating deployment risk vector...`, 1000);
-            await addTerminalLine(`Risk Score: <span class="${data.status === 'blocked' ? 'log-error' : 'log-success'}">${data.deployment_risk_score}/100</span>`, 600);
-            await addTerminalLine(`FINAL VERDICT: <span class="${data.status === 'blocked' ? 'log-error' : 'log-success'}">${data.status.toUpperCase()}</span>`, 800);
-            
-            // Trigger UI reveal
-            revealDashboard(data);
-        }
+            const statusEl = document.getElementById('main-status');
+            statusEl.innerText = reportData.status === 'BLOCKED' ? 'Deployment Blocked' : 'Safe for Release';
+            statusEl.className = `status-badge status-${reportData.status}`;
 
-        function buildThreatMeter(score) {
-            const container = document.getElementById('threatSegments');
-            document.getElementById('riskScoreVal').textContent = score;
-            const numSegments = 20;
-            const segmentsToFill = Math.round((score / 100) * numSegments);
-
-            for(let i=0; i<numSegments; i++) {
-                const seg = document.createElement('div');
-                seg.className = 'segment';
-                container.appendChild(seg);
+            // Agents Matrix
+            let agentsHtml = '';
+            for (const [name, data] of Object.entries(reportData.agents)) {
+                let riskClass = data.riskLevel ? `risk-${data.riskLevel}` : (data.rollbackSafe ? 'risk-NONE' : 'risk-HIGH');
+                let riskText = data.riskLevel || (data.rollbackSafe ? 'SAFE' : 'RISK');
                 
-                setTimeout(() => {
-                    if (i < segmentsToFill) {
-                        if (score >= 80) seg.classList.add('active-critical');
-                        else if (score >= 40) seg.classList.add('active-warning');
-                        else seg.classList.add('active-passed');
-                    }
-                }, i * 50);
-            }
-        }
-
-        function buildAgentMatrix(agents) {
-            const container = document.getElementById('agentMatrix');
-            agents.forEach((agent, i) => {
-                const card = document.createElement('div');
-                card.className = `agent-card ${agent.status}`;
-                
-                const findingsHtml = agent.findings.map(f => `<li>${f}</li>`).join('');
-                const iconSvg = ICONS[agent.name] || ICONS['SchemaAgent'];
-
-                card.innerHTML = `
-                    <div class="agent-header" onclick="this.parentElement.classList.toggle('expanded')">
-                        <div class="agent-name-wrap">
-                            <svg class="agent-icon" viewBox="0 0 24 24">${iconSvg}</svg>
-                            <span class="agent-name">${agent.name}</span>
+                let findingsHtml = '';
+                if (data.findings && data.findings.length > 0) {
+                    findingsHtml = data.findings.map(f => `
+                        <div class="finding-item">
+                            <strong>${f.file || 'Global'}</strong>
+                            ${f.change || f.issue || ''}
                         </div>
-                        <span class="agent-status">${agent.status}</span>
-                    </div>
-                    <div class="agent-content">
-                        <ul class="findings-list">${findingsHtml}</ul>
-                        <div class="recommendation">
-                            <span class="rec-label">AI Recommendation</span>
-                            ${agent.recommendation}
+                    `).join('');
+                }
+
+                agentsHtml += `
+                    <div class="glass agent-card">
+                        <div class="agent-header">
+                            <div class="agent-title">
+                                ${getAgentIcon(name)}
+                                ${name.charAt(0).toUpperCase() + name.slice(1)}
+                            </div>
+                            <span class="risk-badge ${riskClass}">${riskText}</span>
+                        </div>
+                        <div class="agent-body">
+                            ${findingsHtml}
+                            <div class="recommendation">${data.recommendation || data.note || ''}</div>
                         </div>
                     </div>
                 `;
-                
-                // Expand criticals by default after a delay
-                if(agent.status === 'critical') {
-                    setTimeout(() => card.classList.add('expanded'), 500 + (i*200));
-                }
+            }
+            document.getElementById('agents-matrix').innerHTML = agentsHtml;
 
-                container.appendChild(card);
-            });
-        }
-
-        function revealDashboard(data) {
-            // Update Header
-            const statusPill = document.getElementById('globalStatus');
-            const statusText = document.getElementById('globalStatusText');
-            
-            if(data.status === 'blocked') {
-                statusText.textContent = 'DEPLOYMENT BLOCKED';
-                statusPill.style.color = 'var(--critical)';
-                statusPill.style.borderColor = 'var(--critical)';
-                statusPill.style.background = 'rgba(244, 63, 94, 0.1)';
+            // Rollback Proof
+            const rb = reportData.agents.rollback;
+            if (rb) {
+                let codeHtml = `<span class="code-keyword">Method:</span> <span class="code-string">${rb.executionMethod}</span>\n`;
+                if(rb.verificationQuery) codeHtml += `<span class="code-keyword">Query:</span> ${rb.verificationQuery}\n`;
+                if(rb.verificationOutput) codeHtml += `<span class="code-keyword">Output:</span>\n${rb.verificationOutput}\n`;
+                document.getElementById('rollback-content').innerHTML = `<pre>${codeHtml}</pre>`;
             } else {
-                statusText.textContent = 'READY TO DEPLOY';
-                statusPill.style.color = 'var(--passed)';
-                statusPill.style.borderColor = 'var(--passed)';
-                statusPill.style.background = 'rgba(16, 185, 129, 0.1)';
-                document.querySelector('.status-dot').style.background = 'var(--passed)';
+                document.getElementById('rollback-content').innerHTML = 'No rollback data available.';
             }
 
-            buildThreatMeter(data.deployment_risk_score);
-            buildAgentMatrix(data.agents);
-
-            if(data.rollback_proof) {
-                document.getElementById('rollbackProofSection').style.display = 'block';
-                document.getElementById('rbBefore').textContent = data.rollback_proof.before;
-                document.getElementById('rbAfter').textContent = data.rollback_proof.after;
-            }
-
-            if(data.actionable_fixes && data.actionable_fixes.length > 0) {
-                document.getElementById('fixesSection').style.display = 'block';
-                const flist = document.getElementById('fixesList');
-                data.actionable_fixes.forEach(fix => {
-                    const li = document.createElement('li');
-                    li.className = 'check-item';
-                    li.innerHTML = `<div class="check-box"></div><div>${fix}</div>`;
-                    flist.appendChild(li);
-                });
-            }
+            // Fixes Checklist
+            const fixesHtml = reportData.requiredFixes.map(fix => `
+                <li class="check-item">
+                    <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                    <span>${fix}</span>
+                </li>
+            `).join('');
+            document.getElementById('fixes-list').innerHTML = fixesHtml || '<li class="check-item">No fixes required.</li>';
         }
 
-        // Init
-        document.addEventListener('DOMContentLoaded', async () => {
-            const data = await loadData();
-            // Start the terminal animation, which reveals the rest
-            terminalOutput.appendChild(cursorNode);
-            simulateTerminal(data);
+        // Interaction Logic
+        document.getElementById('init-btn').addEventListener('click', async () => {
+            const landing = document.getElementById('landing-state');
+            const dashboard = document.getElementById('dashboard-state');
+            const loadingText = document.getElementById('loading-text');
+            const subtitle = document.querySelector('.logo-subtitle');
+
+            subtitle.style.display = 'none';
+            loadingText.style.opacity = '1';
+
+            // Load data during transition
+            await loadData();
+            renderDashboard();
+
+            setTimeout(() => {
+                landing.style.opacity = '0';
+                landing.style.transform = 'scale(0.9)';
+                
+                setTimeout(() => {
+                    landing.style.display = 'none';
+                    dashboard.style.display = 'block';
+                    
+                    // Trigger reflow to ensure transition runs
+                    void dashboard.offsetWidth; 
+                    
+                    dashboard.style.opacity = '1';
+                    dashboard.style.transform = 'translateY(0)';
+                }, 800);
+            }, 1000);
         });
+
     </script>
 </body>
 </html>
