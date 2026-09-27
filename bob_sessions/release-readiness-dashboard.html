@@ -1,1105 +1,610 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bob Release Guard - Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bob Release Guard - Atlas View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --panel-bg: rgba(17, 24, 39, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --safe: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      
+      --node-root: #e2e8f0;
+      --node-agent: #3b82f6;
+      --node-safe: #10b981;
+      --node-danger: #ef4444;
+      --link-color: rgba(255, 255, 255, 0.2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+    }
+
+    #d3-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+    }
+
+    .top-nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      background: linear-gradient(180deg, rgba(11, 15, 25, 0.9) 0%, rgba(11, 15, 25, 0) 100%);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--accent);
+    }
+
+    .status-pill {
+      margin-left: auto;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      backdrop-filter: blur(4px);
+      border: 1px solid var(--border-color);
+    }
+    .status-blocked {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+    .status-safe {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .sidebar {
+      position: absolute;
+      right: 24px;
+      top: 88px;
+      bottom: 24px;
+      width: 400px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      pointer-events: auto;
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .score-container {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .score-value {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .score-max {
+      font-size: 18px;
+      color: var(--text-muted);
+    }
+
+    .score-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
     
-    <!-- Fonts -->
-    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --bg-primary: #0a0a0b;
-            --bg-secondary: #111113;
-            --bg-card: #1a1a1f;
-            --accent: #e8985a; /* Warm amber */
-            --accent-dark: #d4844c;
-            --success: #4ade80;
-            --success-bg: rgba(74, 222, 128, 0.1);
-            --danger: #ef6461;
-            --danger-bg: rgba(239, 100, 97, 0.1);
-            --text-main: #ececec;
-            --text-muted: #a0a0a8;
-            --border: rgba(255, 255, 255, 0.06);
-            --font-display: 'Satoshi', system-ui, -apple-system, sans-serif;
-            --font-mono: 'IBM Plex Mono', monospace;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            font-family: var(--font-display);
-            line-height: 1.6;
-            overflow-x: hidden;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
-        }
-
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
-
-        /* Utilities */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        .mono { font-family: var(--font-mono); }
-        .text-accent { color: var(--accent); }
-        .text-success { color: var(--success); }
-        .text-danger { color: var(--danger); }
-        .text-muted { color: var(--text-muted); }
-
-        .chip {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .chip-outline { border: 1px solid var(--border); color: var(--text-muted); }
-        .chip-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid rgba(239, 100, 97, 0.2); }
-        .chip-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.2); }
-
-        /* Loading Screen */
-        #loader {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-primary);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-        
-        .shield-pulse {
-            width: 80px;
-            height: 80px;
-            color: var(--accent);
-            animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: .5; transform: scale(0.95); }
-        }
-
-        /* Navbar */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 72px;
-            z-index: 1000;
-            transition: all 0.4s ease;
-            border-bottom: 1px solid transparent;
-        }
-
-        .navbar.scrolled {
-            background: rgba(10, 10, 11, 0.85);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            box-shadow: 0 4px 30px rgba(232, 152, 90, 0.03);
-        }
-
-        .navbar.scrolled::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0.2;
-        }
-
-        .nav-content {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--text-main);
-        }
-
-        .nav-chips {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        /* Hero */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-            padding-top: 72px;
-        }
-
-        .hero-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60vw;
-            height: 60vw;
-            background: radial-gradient(circle, rgba(232,152,90,0.15) 0%, rgba(10,10,11,0) 70%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .hero-overline { margin-bottom: 24px; }
-        
-        .hero h1 {
-            font-size: clamp(40px, 6vw, 72px);
-            font-weight: 900;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-            margin-bottom: 24px;
-        }
-
-        .stroke-text {
-            color: transparent;
-            -webkit-text-stroke: 1.5px var(--accent);
-            text-stroke: 1.5px var(--accent);
-        }
-
-        .hero p {
-            font-size: 18px;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto 40px;
-            white-space: pre-line;
-        }
-
-        .hero-ctas {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            margin-bottom: 64px;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 14px 28px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: var(--bg-primary);
-            border: none;
-        }
-        
-        .btn-primary:hover {
-            background: var(--accent-dark);
-            transform: translateY(-2px);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            color: var(--text-main);
-            border: 1px solid var(--border);
-        }
-
-        .btn-ghost:hover {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .stats-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 32px;
-            justify-content: center;
-            border-top: 1px solid var(--border);
-            padding-top: 32px;
-        }
-
-        .stat-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .stat-val { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
-        .stat-label { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* Section Layout */
-        .section {
-            padding: 100px 0;
-            border-top: 1px solid var(--border);
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            margin-bottom: 48px;
-        }
-
-        .section-title {
-            font-size: 24px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .section-line {
-            height: 1px;
-            background: var(--border);
-            flex-grow: 1;
-        }
-
-        /* Timeline (How it works) */
-        .timeline {
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 20px;
-            bottom: 20px;
-            width: 2px;
-            background: var(--border);
-            z-index: 0;
-        }
-
-        .timeline-step {
-            position: relative;
-            display: flex;
-            gap: 32px;
-            margin-bottom: 48px;
-            z-index: 1;
-        }
-
-        .timeline-step:last-child { margin-bottom: 0; }
-
-        .step-indicator {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-        }
-
-        .step-done .step-indicator { border-color: var(--success); color: var(--success); }
-        .step-active .step-indicator { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 15px rgba(232, 152, 90, 0.2); }
-        .step-blocked .step-indicator { border-color: var(--danger); color: var(--danger); }
-
-        .step-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            flex-grow: 1;
-        }
-
-        .step-content h3 { font-size: 18px; margin-bottom: 8px; }
-        .step-content p { color: var(--text-muted); font-size: 14px; }
-
-        /* Dashboard */
-        .data-source-strip {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            font-size: 13px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Score Gauge */
-        .score-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-
-        .gauge-container {
-            position: relative;
-            width: 200px;
-            height: 100px; /* Semicircle height */
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .gauge-svg {
-            width: 200px;
-            height: 200px;
-            transform: rotate(-180deg);
-        }
-
-        .gauge-bg {
-            fill: none;
-            stroke: var(--border);
-            stroke-width: 12;
-            stroke-dasharray: 314; /* PI * r (r=100 - 12/2 = 94, pi*94 = ~295 actually ) let's use exact math in SVG */
-        }
-
-        .gauge-fill {
-            fill: none;
-            stroke: var(--accent); /* Default */
-            stroke-width: 12;
-            stroke-dasharray: 295.3;
-            stroke-dashoffset: 295.3; /* Start empty */
-            transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.5s;
-        }
-
-        .gauge-ticks {
-            position: absolute;
-            inset: 0;
-            width: 200px;
-            height: 100px;
-        }
-
-        .gauge-value {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 48px;
-            font-weight: 900;
-            line-height: 1;
-            font-family: var(--font-display);
-        }
-        
-        .score-status { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-        
-        /* Agent Grid */
-        .agent-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-
-        @media (max-width: 768px) {
-            .agent-grid { grid-template-columns: 1fr; }
-        }
-
-        .agent-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .agent-card::before {
-            content: '';
-            position: absolute;
-            left: -1px;
-            top: 24px;
-            bottom: 24px;
-            width: 4px;
-            border-radius: 0 4px 4px 0;
-            background: var(--border);
-        }
-
-        .agent-card.high::before { background: var(--danger); }
-        .agent-card.none::before { background: var(--success); }
-        .agent-card.pass::before { background: var(--success); }
-
-        .agent-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-        
-        .agent-title-wrap {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .agent-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .agent-name { font-weight: 600; font-size: 16px; }
-        
-        .agent-findings {
-            flex-grow: 1;
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        .finding-item {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        .finding-item:last-child { margin-bottom: 0; }
-
-        .agent-rec {
-            font-size: 13px;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
-            margin-top: auto;
-        }
-
-        /* Rollback Proof */
-        .rollback-card { margin-top: 24px; }
-        
-        .code-block {
-            background: #000;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            font-family: var(--font-mono);
-            font-size: 13px;
-            overflow-x: auto;
-            margin: 16px 0;
-            color: #d4d4d4;
-        }
-        
-        .diff-row { display: flex; font-family: var(--font-mono); font-size: 13px; }
-        .diff-col { flex: 1; border: 1px solid var(--border); padding: 12px; }
-        .diff-remove { background: rgba(239, 100, 97, 0.05); color: #ef6461; }
-        .diff-add { background: rgba(74, 222, 128, 0.05); color: #4ade80; }
-        
-        /* Blockers & Fixes */
-        .blockers-alert {
-            background: var(--danger-bg);
-            border: 1px solid rgba(239, 100, 97, 0.2);
-            border-radius: 8px;
-            padding: 24px;
-            margin-top: 24px;
-        }
-
-        .blockers-alert h3 { color: var(--danger); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;}
-        
-        .fixes-list {
-            list-style: none;
-            margin-top: 24px;
-        }
-        .fix-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            background: var(--bg-card);
-        }
-        .fix-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 12px;
-        }
-        .fix-done .fix-icon { background: var(--success-bg); color: var(--success); }
-        .fix-pending .fix-icon { background: rgba(232, 152, 90, 0.1); color: var(--accent); border: 1px solid var(--accent); }
-
-        /* Footer */
-        .footer {
-            border-top: 1px solid var(--border);
-            padding: 48px 0;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-        .footer-links { margin-top: 16px; display: flex; justify-content: center; gap: 24px;}
-        .footer-links a:hover { color: var(--text-main); }
-
-        /* Animation Classes */
-        .fade-in {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-    </style>
+    /* Custom Scrollbar for sidebar */
+    .sidebar-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .sidebar-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .blocker-item, .fix-item {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .blocker-item {
+      border-left: 4px solid var(--danger);
+    }
+    
+    .fix-item {
+      border-left: 4px solid var(--warning);
+    }
+
+    .item-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #f8fafc;
+    }
+
+    .item-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .item-agent {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-color);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s ease;
+    }
+
+    .loader-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(59, 130, 246, 0.3);
+      border-radius: 50%;
+      border-top-color: var(--accent);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .d3-tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 8px 12px;
+      font: 12px 'JetBrains Mono', monospace;
+      background: rgba(15, 23, 42, 0.9);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 20;
+      backdrop-filter: blur(4px);
+    }
+  </style>
 </head>
 <body>
-
-    <!-- Loading Overlay -->
-    <div id="loader">
-        <svg class="shield-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <path d="M9 12l2 2 4-4"></path>
-        </svg>
+  <div id="loader">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;">Initializing Atlas View...</div>
     </div>
+  </div>
 
-    <!-- Navbar -->
-    <nav class="navbar" id="navbar">
-        <div class="container nav-content">
-            <div class="logo-wrap">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    <path d="M9 12l2 2 4-4"></path>
-                </svg>
-                Release Guard
-            </div>
-            <div class="nav-chips">
-                <span class="chip chip-outline mono" id="nav-branch">main</span>
-                <span class="chip chip-outline mono" id="nav-commit">------</span>
-                <span class="chip" id="nav-status">LOADING</span>
-            </div>
-        </div>
-    </nav>
+  <svg id="d3-canvas"></svg>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-glow"></div>
-        <div class="container fade-in">
-            <div class="hero-overline">
-                <span class="chip chip-outline">IBM Bob 2.0 Hackathon</span>
-            </div>
-            <h1>Your last line of <span class="stroke-text">defense</span><br>before production.</h1>
-            <p>Four AI agents. One verdict. Zero surprises.<br>Bob Release Guard catches what CI/CD misses.</p>
+  <nav class="top-nav">
+    <div class="logo-container">
+      <svg class="logo-svg" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+      Bob Release Guard
+    </div>
+    <div id="header-status" class="status-pill">ANALYZING</div>
+  </nav>
+
+  <aside class="sidebar">
+    <header class="sidebar-header">
+      <div class="score-container">
+        <div id="overall-score" class="score-value">--</div>
+        <div class="score-max">/ 100</div>
+      </div>
+      <div class="score-label">Release Readiness Score</div>
+    </header>
+    <div class="sidebar-content">
+      <div id="blockers-section" style="display: none;">
+        <div class="section-title">Critical Blockers (<span id="blocker-count">0</span>)</div>
+        <div id="blockers-list"></div>
+      </div>
+      
+      <div id="fixes-section" style="margin-top: 32px; display: none;">
+        <div class="section-title">Required Fixes</div>
+        <div id="fixes-list"></div>
+      </div>
+    </div>
+  </aside>
+  
+  <div id="tooltip" class="d3-tooltip"></div>
+
+  <script>
+    const FALLBACK_DATA = {
+      "commit": "177dc6a",
+      "status": "BLOCKED",
+      "overallScore": 42,
+      "summary": "Database schema mismatch detected. The column 'emailAddress' is expected but code references 'email'.",
+      "blockers": [
+        {
+          "agent": "Schema Agent",
+          "severity": "HIGH",
+          "description": "Migration file 20231015-rename-email-to-emailAddress.js conflicts with user.js and userController.js which still use 'email'.",
+          "file": "userController.js"
+        },
+        {
+          "agent": "Dependency Agent",
+          "severity": "HIGH",
+          "description": "Package 'pg' version 8.11.0 has a known critical vulnerability. Update to 8.11.3 required.",
+          "file": "package.json"
+        }
+      ],
+      "requiredFixes": [
+        {
+          "agent": "Schema Agent",
+          "action": "Update 'user.js' and 'userController.js' to use 'emailAddress' instead of 'email'."
+        },
+        {
+          "agent": "Dependency Agent",
+          "action": "Run 'npm install pg@8.11.3'."
+        }
+      ]
+    };
+
+    async function loadData() {
+      try {
+        const response = await fetch('/report.json');
+        if (!response.ok) throw new Error('Network error');
+        return await response.json();
+      } catch (e) {
+        try {
+          const response2 = await fetch('./report.json');
+          if (!response2.ok) throw new Error('Network error');
+          return await response2.json();
+        } catch (e2) {
+          console.warn('Using fallback data');
+          return FALLBACK_DATA;
+        }
+      }
+    }
+
+    function hideLoader() {
+      const loader = document.getElementById('loader');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 300);
+      }
+    }
+
+    function renderUI(data) {
+      // Score
+      const scoreEl = document.getElementById('overall-score');
+      if (scoreEl) {
+        scoreEl.textContent = data.overallScore || 0;
+        scoreEl.style.color = data.overallScore > 80 ? 'var(--safe)' : (data.overallScore > 50 ? 'var(--warning)' : 'var(--danger)');
+      }
+
+      // Status
+      const statusEl = document.getElementById('header-status');
+      if (statusEl) {
+        statusEl.textContent = data.status || 'UNKNOWN';
+        if (data.status === 'SAFE') {
+          statusEl.className = 'status-pill status-safe';
+        } else if (data.status === 'BLOCKED') {
+          statusEl.className = 'status-pill status-blocked';
+        } else {
+          statusEl.className = 'status-pill';
+        }
+      }
+
+      // Blockers
+      const blockersSection = document.getElementById('blockers-section');
+      const blockersList = document.getElementById('blockers-list');
+      const blockerCount = document.getElementById('blocker-count');
+      if (data.blockers && data.blockers.length > 0 && blockersSection && blockersList && blockerCount) {
+        blockersSection.style.display = 'block';
+        blockerCount.textContent = data.blockers.length;
+        blockersList.innerHTML = data.blockers.map(b => `
+          <div class="blocker-item">
+            <div class="item-title">${b.severity} Blocker</div>
+            <div class="item-desc">${b.description}</div>
+            <div class="item-agent">${b.agent} • ${b.file || 'System'}</div>
+          </div>
+        `).join('');
+      }
+
+      // Fixes
+      const fixesSection = document.getElementById('fixes-section');
+      const fixesList = document.getElementById('fixes-list');
+      if (data.requiredFixes && data.requiredFixes.length > 0 && fixesSection && fixesList) {
+        fixesSection.style.display = 'block';
+        fixesList.innerHTML = data.requiredFixes.map(f => `
+          <div class="fix-item">
+            <div class="item-title">Suggested Action</div>
+            <div class="item-desc">${f.action}</div>
+            <div class="item-agent">${f.agent}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function buildGraphData(data) {
+      const nodes = [];
+      const links = [];
+      
+      const commitId = data.commit || 'HEAD';
+      
+      nodes.push({ id: 'commit', label: 'Commit ' + commitId, group: 'root', radius: 30 });
+      
+      const agents = ['Schema Agent', 'Config Agent', 'Dependency Agent', 'Rollback Agent'];
+      
+      agents.forEach(agent => {
+        const agentId = 'agent_' + agent.replace(/\s+/g, '');
+        nodes.push({ id: agentId, label: agent, group: 'agent', radius: 20 });
+        links.push({ source: 'commit', target: agentId, value: 2 });
+      });
+
+      // Extract files from blockers to connect to agents
+      if (data.blockers) {
+        data.blockers.forEach((b, i) => {
+          if (b.file) {
+            const fileId = 'file_' + i;
+            const agentId = 'agent_' + b.agent.replace(/\s+/g, '');
             
-            <div class="hero-ctas">
-                <a href="#dashboard" class="btn btn-primary">See Live Report &darr;</a>
-                <a href="https://github.com/faelyono/IBM-Bob-2.0-Hackathon" target="_blank" class="btn btn-ghost">View on GitHub &rarr;</a>
-            </div>
-
-            <div class="stats-row">
-                <div class="stat-item">
-                    <span class="stat-val">4</span>
-                    <span class="stat-label">Agents</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-val">&lt; 30s</span>
-                    <span class="stat-label">Analysis</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-val">Real DB</span>
-                    <span class="stat-label">Proof</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-val">Zero</span>
-                    <span class="stat-label">False Positives</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How it works -->
-    <section class="section container fade-in" id="how-it-works">
-        <div class="section-header">
-            <h2 class="section-title">How it works</h2>
-            <div class="section-line"></div>
-        </div>
-
-        <div class="timeline">
-            <div class="timeline-step step-done">
-                <div class="step-indicator">&#10003;</div>
-                <div class="step-content">
-                    <h3>1. Detect Changes (&#128194;)</h3>
-                    <p>Git diff identifies every changed file, isolated cleanly from the base branch.</p>
-                </div>
-            </div>
-            <div class="timeline-step step-done">
-                <div class="step-indicator">&#10003;</div>
-                <div class="step-content">
-                    <h3>2. 4 Parallel Agents (&#9889;)</h3>
-                    <p>Schema, Config, Dependency, and Rollback agents fire simultaneously to analyze the delta.</p>
-                </div>
-            </div>
-            <div class="timeline-step step-done">
-                <div class="step-indicator">&#10003;</div>
-                <div class="step-content">
-                    <h3>3. Branch Proof (&#128300;)</h3>
-                    <p>Down-migrations run on an isolated Neon database branch to guarantee rollback safety.</p>
-                </div>
-            </div>
-            <div class="timeline-step step-blocked" id="step-human">
-                <div class="step-indicator">&#10005;</div>
-                <div class="step-content">
-                    <h3>4. Human Gate (&#128683;)</h3>
-                    <p>High risk detected. Deployment is hard-blocked pending human approval or fixes.</p>
-                </div>
-            </div>
-            <div class="timeline-step step-active">
-                <div class="step-indicator">5</div>
-                <div class="step-content">
-                    <h3>5. Live Report (&#128202;)</h3>
-                    <p>You are here. Review the detailed findings below.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Live Dashboard -->
-    <section class="section container fade-in" id="dashboard">
-        <div class="section-header">
-            <h2 class="section-title">Live Release Report</h2>
-            <div class="section-line"></div>
-        </div>
-
-        <div class="data-source-strip mono">
-            <span>Data Source: <span id="source-name">report.json</span></span>
-            <span id="gen-time">Generated: --</span>
-        </div>
-
-        <div class="dashboard-grid">
-            <!-- Score Card -->
-            <div class="card score-card">
-                <div class="gauge-container">
-                    <svg class="gauge-svg" viewBox="0 0 200 200">
-                        <path class="gauge-bg" d="M 10 100 A 90 90 0 0 1 190 100"></path>
-                        <path class="gauge-fill" id="gauge-path" d="M 10 100 A 90 90 0 0 1 190 100"></path>
-                    </svg>
-                    <div class="gauge-value" id="score-val">--</div>
-                </div>
-                <div class="score-status" id="score-status-text">--</div>
-                <p class="text-muted" style="font-size: 14px;">Release Readiness Score</p>
-            </div>
-
-            <!-- Agent Grid -->
-            <div class="agent-grid">
-                
-                <div class="agent-card" id="card-schema">
-                    <div class="agent-header">
-                        <div class="agent-title-wrap">
-                            <div class="agent-icon">&#128209;</div>
-                            <span class="agent-name">Schema Agent</span>
-                        </div>
-                        <span class="chip" id="badge-schema">--</span>
-                    </div>
-                    <div class="agent-findings" id="findings-schema"></div>
-                    <div class="agent-rec" id="rec-schema"></div>
-                </div>
-
-                <div class="agent-card" id="card-config">
-                    <div class="agent-header">
-                        <div class="agent-title-wrap">
-                            <div class="agent-icon">&#9881;&#65039;</div>
-                            <span class="agent-name">Config Agent</span>
-                        </div>
-                        <span class="chip" id="badge-config">--</span>
-                    </div>
-                    <div class="agent-findings" id="findings-config"></div>
-                    <div class="agent-rec" id="rec-config"></div>
-                </div>
-
-                <div class="agent-card" id="card-dependency">
-                    <div class="agent-header">
-                        <div class="agent-title-wrap">
-                            <div class="agent-icon">&#128230;</div>
-                            <span class="agent-name">Dependency Agent</span>
-                        </div>
-                        <span class="chip" id="badge-dependency">--</span>
-                    </div>
-                    <div class="agent-findings" id="findings-dependency"></div>
-                    <div class="agent-rec" id="rec-dependency"></div>
-                </div>
-
-                <div class="agent-card" id="card-rollback">
-                    <div class="agent-header">
-                        <div class="agent-title-wrap">
-                            <div class="agent-icon">&#9194;</div>
-                            <span class="agent-name">Rollback Agent</span>
-                        </div>
-                        <span class="chip" id="badge-rollback">--</span>
-                    </div>
-                    <div class="agent-findings" id="findings-rollback"></div>
-                    <div class="agent-rec" id="rec-rollback"></div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- Blockers -->
-        <div id="blockers-container" style="display: none;" class="fade-in">
-            <div class="blockers-alert">
-                <h3>&#9888;&#65039; Deployment Blockers</h3>
-                <ul style="margin-left: 24px; margin-top: 12px; color: var(--text-main);" id="blockers-list">
-                </ul>
-            </div>
-        </div>
-
-        <!-- Required Fixes -->
-        <div class="card fade-in" style="margin-top: 24px;">
-            <h3 style="margin-bottom: 8px;">Required Fixes</h3>
-            <p class="text-muted" style="font-size: 14px;">Complete these steps to unblock the deployment.</p>
-            <ul class="fixes-list" id="fixes-list">
-                <!-- Injected via JS -->
-            </ul>
-        </div>
-
-        <!-- Rollback Proof details -->
-        <div class="card rollback-card fade-in" id="rollback-proof-card">
-            <h3>Rollback Proof Details</h3>
-            <p class="text-muted" style="font-size: 14px; margin-bottom: 16px;">Isolated Neon branch verification.</p>
+            nodes.push({ 
+              id: fileId, 
+              label: b.file, 
+              group: b.severity === 'HIGH' ? 'danger' : 'warning',
+              radius: 15,
+              desc: b.description
+            });
             
-            <div class="diff-row">
-                <div class="diff-col diff-remove">
-                    <div style="margin-bottom:8px; opacity:0.7;">Before Rollback (Failed state)</div>
-                    <div>- emailAddress (VARCHAR)</div>
-                </div>
-                <div class="diff-col diff-add">
-                    <div style="margin-bottom:8px; opacity:0.7;">After Rollback (Restored state)</div>
-                    <div>+ email (VARCHAR)</div>
-                </div>
-            </div>
+            // Connect agent to file
+            const agentExists = nodes.find(n => n.id === agentId);
+            links.push({ source: agentExists ? agentId : 'commit', target: fileId, value: 1 });
+          }
+        });
+      }
 
-            <div class="code-block" id="sql-proof">
-                -- Loading verification query...
-            </div>
-            
-            <div style="background: var(--success-bg); color: var(--success); padding: 12px; border-radius: 6px; font-weight: 600; text-align: center; border: 1px solid rgba(74,222,128,0.2);">
-                PASS &mdash; Column restored on isolated branch
-            </div>
-        </div>
+      // Add a dummy safe file for visual flavor
+      nodes.push({ id: 'safe_1', label: 'README.md', group: 'safe', radius: 10 });
+      links.push({ source: 'agent_ConfigAgent', target: 'safe_1', value: 1 });
+      
+      return { nodes, links };
+    }
 
-    </section>
+    function renderD3(data) {
+      const graphData = buildGraphData(data);
+      
+      const width = window.innerWidth;
+      const height = window.innerHeight;
 
-    <footer class="footer">
-        <div class="container">
-            <p>IBM Bob 2.0 Hackathon &mdash; Release Guard</p>
-            <p style="margin-top: 8px; opacity: 0.6; font-size: 12px;">Built with IBM Bob</p>
-            <div class="footer-links">
-                <a href="https://github.com/faelyono/IBM-Bob-2.0-Hackathon" target="_blank">GitHub Repository</a>
-            </div>
-        </div>
-    </footer>
+      const svg = d3.select("#d3-canvas")
+        .attr("viewBox", [0, 0, width, height]);
+        
+      const g = svg.append("g");
+      
+      // Setup Zoom
+      const zoom = d3.zoom()
+        .scaleExtent([0.5, 4])
+        .on("zoom", (event) => {
+          g.attr("transform", event.transform);
+        });
+        
+      svg.call(zoom);
 
-    <script>
-        // Fallback Data
-        const FALLBACK_DATA = {
-            "generatedAt": "2025-09-26T08:30:00.000Z",
-            "commit": "177dc6a",
-            "branch": "main",
-            "score": 20,
-            "status": "BLOCKED",
-            "agents": {
-                "schema": {
-                    "riskLevel": "HIGH",
-                    "findings": [
-                        { "file": "migrations/20260926082116-rename-email-to-emailAddress.js", "change": "Column 'email' renamed to 'emailAddress' on Users table", "impact": "Breaking — queries referencing email will fail" },
-                        { "file": "models/user.js", "change": "Model still declares field as 'email'", "impact": "All ORM operations will throw DatabaseError" },
-                        { "file": "controllers/userController.js", "change": "getUser() queries { where: { email: ... } }", "impact": "All user lookups return HTTP 500" }
-                    ],
-                    "recommendation": "Update model and controller to use emailAddress. Audit full codebase for remaining references to old column name."
-                },
-                "config": { "riskLevel": "NONE", "findings": [], "recommendation": "No configuration changes required. All env vars present." },
-                "dependency": { "riskLevel": "NONE", "findings": [], "recommendation": "No dependency files changed. All versions stable." },
-                "rollback": {
-                    "rollbackSafe": true, "verdict": "PASS",
-                    "migrationRolledBack": "20260926082116-rename-email-to-emailAddress.js",
-                    "branchName": "rollback-test-demo", "executionMethod": "hybrid-manual",
-                    "verificationQuery": "SELECT column_name FROM information_schema.columns WHERE table_name='Users' ORDER BY ordinal_position",
-                    "verificationOutput": "[{\\"column_name\\":\\"id\\"},{\\"column_name\\":\\"firstName\\"},{\\"column_name\\":\\"lastName\\"},{\\"column_name\\":\\"email\\"},{\\"column_name\\":\\"createdAt\\"},{\\"column_name\\":\\"updatedAt\\"}]",
-                    "note": "Neon REST API unreachable from Bob sandbox (TLS blocked). Proof completed manually from host terminal using identical steps."
-                }
-            },
-            "blockers": ["Schema mismatch: rename migration applied but model (user.js) and controller (userController.js) still reference old column name 'email'"],
-            "requiredFixes": [
-                "Update target-app/src/database/models/user.js — rename field from email to emailAddress",
-                "Update target-app/src/controllers/userController.js — change where clause to use emailAddress",
-                "Audit full codebase for remaining 'email' column references (seeds, tests, other controllers)",
-                "Re-run release readiness check from CI runner to automate Rollback Agent proof end-to-end"
-            ]
-        };
+      const simulation = d3.forceSimulation(graphData.nodes)
+        .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(100))
+        .force("charge", d3.forceManyBody().strength(-500))
+        .force("center", d3.forceCenter(width / 2 - 100, height / 2))
+        .force("collide", d3.forceCollide().radius(d => d.radius + 10));
 
-        // Scroll Logic for Navbar
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
+      // Glow filter
+      const defs = svg.append("defs");
+      const filter = defs.append("filter")
+          .attr("id", "glow");
+      filter.append("feGaussianBlur")
+          .attr("stdDeviation", "3")
+          .attr("result", "coloredBlur");
+      const feMerge = filter.append("feMerge");
+      feMerge.append("feMergeNode").attr("in", "coloredBlur");
+      feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+      const link = g.append("g")
+        .attr("stroke", "var(--link-color)")
+        .attr("stroke-opacity", 0.6)
+        .selectAll("line")
+        .data(graphData.links)
+        .join("line")
+        .attr("stroke-width", d => Math.sqrt(d.value) * 1.5);
+
+      const nodeGroup = g.append("g")
+        .selectAll(".node")
+        .data(graphData.nodes)
+        .join("g")
+        .attr("class", "node")
+        .call(drag(simulation));
+        
+      const tooltip = d3.select("#tooltip");
+
+      nodeGroup.append("circle")
+        .attr("r", d => d.radius)
+        .attr("fill", d => {
+          if (d.group === 'root') return "var(--node-root)";
+          if (d.group === 'agent') return "var(--node-agent)";
+          if (d.group === 'danger') return "var(--node-danger)";
+          if (d.group === 'warning') return "var(--warning)";
+          return "var(--node-safe)";
+        })
+        .style("filter", "url(#glow)")
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(200).style("opacity", 1);
+          tooltip.html(`<strong>${d.label}</strong>${d.desc ? '<br/>' + d.desc : ''}`)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 15) + "px");
+          
+          d3.select(event.currentTarget).attr("stroke", "#fff").attr("stroke-width", 2);
+        })
+        .on("mouseout", (event, d) => {
+          tooltip.transition().duration(500).style("opacity", 0);
+          d3.select(event.currentTarget).attr("stroke", null);
         });
 
-        // Intersection Observer for fade-ins
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: "0px 0px -50px 0px"
-        };
+      nodeGroup.append("text")
+        .text(d => d.label)
+        .attr("x", d => d.radius + 8)
+        .attr("y", 4)
+        .style("font-family", "'JetBrains Mono', monospace")
+        .style("font-size", "12px")
+        .style("fill", "var(--text-main)")
+        .style("pointer-events", "none")
+        .style("text-shadow", "0px 2px 4px rgba(0,0,0,0.8)");
+
+      simulation.on("tick", () => {
+        link
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+
+        nodeGroup
+          .attr("transform", d => `translate(${d.x},${d.y})`);
+      });
+
+      function drag(simulation) {
+        function dragstarted(event) {
+          if (!event.active) simulation.alphaTarget(0.3).restart();
+          event.subject.fx = event.subject.x;
+          event.subject.fy = event.subject.y;
+        }
         
-        let gaugeAnimated = false;
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
-                    
-                    // Animate gauge if it's the dashboard section
-                    if (entry.target.id === 'dashboard' && !gaugeAnimated && window.dashboardData) {
-                        animateGauge(window.dashboardData.score);
-                        gaugeAnimated = true;
-                    }
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-
-        function animateGauge(score) {
-            const gaugePath = document.getElementById('gauge-path');
-            const scoreVal = document.getElementById('score-val');
-            
-            // Total length of semicircle is roughly 282.7 (pi * r, r=90)
-            const length = 282.7;
-            gaugePath.style.strokeDasharray = length;
-            
-            // Map 0-100 to offset (length to 0)
-            const offset = length - (length * (score / 100));
-            
-            // Determine color
-            let color = 'var(--success)';
-            if (score < 40) color = 'var(--danger)';
-            else if (score < 70) color = 'var(--accent)';
-            
-            setTimeout(() => {
-                gaugePath.style.strokeDashoffset = offset;
-                gaugePath.style.stroke = color;
-                
-                // Count up animation
-                let current = 0;
-                const duration = 1500;
-                const stepTime = Math.abs(Math.floor(duration / score));
-                const timer = setInterval(() => {
-                    current++;
-                    scoreVal.textContent = current;
-                    scoreVal.style.color = color;
-                    if (current >= score) {
-                        clearInterval(timer);
-                    }
-                }, stepTime);
-            }, 300);
+        function dragged(event) {
+          event.subject.fx = event.x;
+          event.subject.fy = event.y;
         }
-
-        function getRiskBadgeClass(level) {
-            if (level === 'HIGH' || level === 'FAIL') return 'chip-danger';
-            if (level === 'NONE' || level === 'PASS') return 'chip-success';
-            return 'chip-outline'; // Medium/Amber fallback
+        
+        function dragended(event) {
+          if (!event.active) simulation.alphaTarget(0);
+          event.subject.fx = null;
+          event.subject.fy = null;
         }
+        
+        return d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended);
+      }
+      
+      // Initial zoom transform
+      svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
+    }
 
-        function getCardBorderClass(level) {
-            if (level === 'HIGH' || level === 'FAIL') return 'high';
-            if (level === 'NONE' || level === 'PASS') return 'none';
-            return 'warn';
-        }
+    async function init() {
+      try {
+        const data = await loadData();
+        renderUI(data);
+        renderD3(data);
+      } catch (e) {
+        console.error("Error initializing dashboard:", e);
+      } finally {
+        hideLoader();
+      }
+    }
 
-        function renderAgent(id, data, titleKey) {
-            const card = document.getElementById(\`card-\${id}\`);
-            const badge = document.getElementById(\`badge-\${id}\`);
-            const findings = document.getElementById(\`findings-\${id}\`);
-            const rec = document.getElementById(\`rec-\${id}\`);
-
-            const risk = data.riskLevel || data.verdict;
-            
-            card.classList.add(getCardBorderClass(risk));
-            badge.textContent = risk;
-            badge.className = \`chip \${getRiskBadgeClass(risk)}\`;
-
-            if (data.findings && data.findings.length > 0) {
-                findings.innerHTML = data.findings.map(f => \`
-                    <div class="finding-item">
-                        <div class="mono" style="margin-bottom:4px;color:var(--text-main);">\${f.file}</div>
-                        <div style="color:var(--text-muted);">\${f.change}</div>
-                        <div style="margin-top:4px;color:var(--danger);">&#9888;&#65039; \${f.impact}</div>
-                    </div>
-                \`).join('');
-            } else if (data.findings && data.findings.length === 0) {
-                findings.innerHTML = \`<div style="color:var(--text-muted); font-style:italic;">No issues detected.</div>\`;
-            } else if (id === 'rollback') {
-                 findings.innerHTML = \`<div style="color:var(--text-muted);">Verified migration rollback on branch <span class="mono">\${data.branchName}</span></div>\`;
-            }
-
-            rec.innerHTML = \`<strong>Recommendation:</strong> \${data.recommendation || data.note}\`;
-        }
-
-        function renderDashboard(data) {
-            window.dashboardData = data; // store for animation
-
-            // Navbar
-            document.getElementById('nav-branch').textContent = data.branch;
-            document.getElementById('nav-commit').textContent = data.commit;
-            
-            const navStatus = document.getElementById('nav-status');
-            navStatus.textContent = data.status;
-            navStatus.className = \`chip \${data.status === 'BLOCKED' ? 'chip-danger' : 'chip-success'}\`;
-
-            // Hero Timeline Updates based on status
-            if (data.status !== 'BLOCKED') {
-                const stepHuman = document.getElementById('step-human');
-                stepHuman.className = 'timeline-step step-done';
-                stepHuman.querySelector('.step-indicator').innerHTML = '&#10003;';
-                stepHuman.querySelector('p').textContent = 'No high risks detected. Approved for deployment.';
-            }
-
-            // Dashboard Meta
-            const d = new Date(data.generatedAt);
-            document.getElementById('gen-time').textContent = \`Generated: \${d.toLocaleString()}\`;
-            
-            // Score area setup (animation triggers on scroll)
-            document.getElementById('score-status-text').textContent = data.status;
-            let statusColor = data.status === 'BLOCKED' ? 'var(--danger)' : 'var(--success)';
-            document.getElementById('score-status-text').style.color = statusColor;
-
-            // Render Agents
-            renderAgent('schema', data.agents.schema);
-            renderAgent('config', data.agents.config);
-            renderAgent('dependency', data.agents.dependency);
-            renderAgent('rollback', data.agents.rollback);
-
-            // Blockers
-            if (data.status === 'BLOCKED' && data.blockers && data.blockers.length > 0) {
-                const bContainer = document.getElementById('blockers-container');
-                bContainer.style.display = 'block';
-                const bList = document.getElementById('blockers-list');
-                bList.innerHTML = data.blockers.map(b => \`<li>\${b}</li>\`).join('');
-            }
-
-            // Fixes
-            const fList = document.getElementById('fixes-list');
-            if (data.requiredFixes && data.requiredFixes.length > 0) {
-                fList.innerHTML = data.requiredFixes.map((fix, idx) => {
-                    const isDone = idx < 2; // Mocking first two as done per requirements
-                    return \`
-                        <li class="fix-item \${isDone ? 'fix-done' : 'fix-pending'}">
-                            <div class="fix-icon">\${isDone ? '&#10003;' : (idx + 1)}</div>
-                            <div>\${fix}</div>
-                        </li>
-                    \`;
-                }).join('');
-            } else {
-                 fList.innerHTML = \`<li class="fix-item"><div class="text-muted">No fixes required.</div></li>\`;
-            }
-
-            // Rollback details
-            if (data.agents.rollback) {
-                document.getElementById('sql-proof').innerHTML = \`> \${data.agents.rollback.verificationQuery}<br><br><span style="color:#4ade80;">// Result</span><br>\${data.agents.rollback.verificationOutput}\`;
-            }
-
-            // Hide Loader
-            setTimeout(() => {
-                const loader = document.getElementById('loader');
-                loader.style.opacity = '0';
-                setTimeout(() => loader.style.display = 'none', 500);
-            }, 800);
-        }
-
-        async function init() {
-            try {
-                // Try fetching remote
-                const res = await fetch('/report.json').catch(() => null);
-                if (res && res.ok) {
-                    const data = await res.json();
-                    renderDashboard(data);
-                    return;
-                }
-                
-                // Try fetching local
-                const resLocal = await fetch('./report.json').catch(() => null);
-                if (resLocal && resLocal.ok) {
-                    const data = await resLocal.json();
-                    document.getElementById('source-name').textContent = './report.json (Local)';
-                    renderDashboard(data);
-                    return;
-                }
-
-                // Fallback
-                console.log("Using fallback data");
-                document.getElementById('source-name').textContent = 'Embedded Fallback Data';
-                renderDashboard(FALLBACK_DATA);
-
-            } catch (err) {
-                console.error("Error loading data", err);
-                document.getElementById('source-name').textContent = 'Error - Loaded Fallback';
-                renderDashboard(FALLBACK_DATA);
-            }
-        }
-
-        // Boot
-        document.addEventListener('DOMContentLoaded', init);
-
-    </script>
+    // Run on load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
 </body>
 </html>
