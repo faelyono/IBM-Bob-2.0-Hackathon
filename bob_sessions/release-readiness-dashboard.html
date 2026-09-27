@@ -1,610 +1,765 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bob Release Guard - Atlas View</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-  <style>
-    :root {
-      --bg-color: #0b0f19;
-      --panel-bg: rgba(17, 24, 39, 0.7);
-      --border-color: rgba(255, 255, 255, 0.1);
-      --text-main: #e2e8f0;
-      --text-muted: #94a3b8;
-      --accent: #3b82f6;
-      --safe: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      
-      --node-root: #e2e8f0;
-      --node-agent: #3b82f6;
-      --node-safe: #10b981;
-      --node-danger: #ef4444;
-      --link-color: rgba(255, 255, 255, 0.2);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body, html {
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: 'Inter', sans-serif;
-    }
-
-    #d3-canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1;
-    }
-
-    .top-nav {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 64px;
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      background: linear-gradient(180deg, rgba(11, 15, 25, 0.9) 0%, rgba(11, 15, 25, 0) 100%);
-      z-index: 10;
-      pointer-events: none;
-    }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 600;
-      font-size: 18px;
-      letter-spacing: 0.5px;
-    }
-
-    .logo-svg {
-      width: 24px;
-      height: 24px;
-      fill: var(--accent);
-    }
-
-    .status-pill {
-      margin-left: auto;
-      padding: 6px 16px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      backdrop-filter: blur(4px);
-      border: 1px solid var(--border-color);
-    }
-    .status-blocked {
-      background: rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
-      border-color: rgba(239, 68, 68, 0.5);
-    }
-    .status-safe {
-      background: rgba(16, 185, 129, 0.2);
-      color: #6ee7b7;
-      border-color: rgba(16, 185, 129, 0.5);
-    }
-
-    .sidebar {
-      position: absolute;
-      right: 24px;
-      top: 88px;
-      bottom: 24px;
-      width: 400px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      pointer-events: auto;
-    }
-
-    .sidebar-header {
-      padding: 24px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .score-container {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-    }
-
-    .score-value {
-      font-size: 48px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .score-max {
-      font-size: 18px;
-      color: var(--text-muted);
-    }
-
-    .score-label {
-      font-size: 14px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 4px;
-    }
-
-    .sidebar-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob Release Guard - Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
-    /* Custom Scrollbar for sidebar */
-    .sidebar-content::-webkit-scrollbar {
-      width: 6px;
-    }
-    .sidebar-content::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .sidebar-content::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-    }
+    <style>
+        :root {
+            --bg-color: #0D0D12;
+            --surface: #17181F;
+            --surface-hover: #22232D;
+            --border: #2E2F3E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8B8C9A;
+            --accent: #E58A3E;
+            --accent-glow: rgba(229, 138, 62, 0.2);
+            --critical: #F43F5E;
+            --warning: #F59E0B;
+            --passed: #10B981;
+        }
 
-    .section-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      font-weight: 600;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-    .blocker-item, .fix-item {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-    
-    .blocker-item {
-      border-left: 4px solid var(--danger);
-    }
-    
-    .fix-item {
-      border-left: 4px solid var(--warning);
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
 
-    .item-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: #f8fafc;
-    }
+        /* HEADER */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13, 13, 18, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .item-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .item-agent {
-      display: inline-block;
-      margin-top: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--accent);
-      background: rgba(59, 130, 246, 0.1);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-    #loader {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-color);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.3s ease;
-    }
+        .title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
 
-    .loader-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-    }
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: 1px solid var(--critical);
+            color: var(--critical);
+            background: rgba(244, 63, 94, 0.1);
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+        }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(59, 130, 246, 0.3);
-      border-radius: 50%;
-      border-top-color: var(--accent);
-      animation: spin 1s ease-in-out infinite;
-    }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--critical);
+            animation: pulse 2s infinite;
+        }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .d3-tooltip {
-      position: absolute;
-      text-align: center;
-      padding: 8px 12px;
-      font: 12px 'JetBrains Mono', monospace;
-      background: rgba(15, 23, 42, 0.9);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 6px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s;
-      z-index: 20;
-      backdrop-filter: blur(4px);
-    }
-  </style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+        }
+
+        /* MAIN LAYOUT */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* LEFT COLUMN - TERMINAL */
+        .terminal-container {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            background: var(--surface);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+            margin-right: 16px;
+        }
+
+        .terminal-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #A0A0B0;
+            flex: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 150px);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-line {
+            opacity: 0;
+            transform: translateY(5px);
+            animation: fadeInLog 0.2s forwards;
+            word-break: break-word;
+        }
+        
+        @keyframes fadeInLog {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-prefix { color: #8B8C9A; }
+        .log-agent { color: #60A5FA; }
+        .log-warn { color: var(--warning); }
+        .log-error { color: var(--critical); }
+        .log-success { color: var(--passed); }
+        .log-accent { color: var(--accent); }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: var(--accent);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* RIGHT COLUMN - DASHBOARD */
+        .dashboard-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        /* THREAT METER */
+        .threat-meter {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .threat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1rem;
+        }
+
+        .threat-score {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--critical);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .segments {
+            display: flex;
+            gap: 4px;
+            height: 12px;
+        }
+
+        .segment {
+            flex: 1;
+            border-radius: 2px;
+            background: #2E2F3E;
+            transition: background 0.5s ease;
+        }
+
+        .segment.active-passed { background: var(--passed); }
+        .segment.active-warning { background: var(--warning); }
+        .segment.active-critical { background: var(--critical); box-shadow: 0 0 8px var(--critical); }
+
+        /* AGENT CARDS */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .agent-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .agent-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .agent-card.critical { border-left: 4px solid var(--critical); }
+        .agent-card.warning { border-left: 4px solid var(--warning); }
+        .agent-card.passed { border-left: 4px solid var(--passed); }
+
+        .agent-header {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .agent-name-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .agent-icon {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .agent-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .agent-card.critical .agent-status { color: var(--critical); background: rgba(244, 63, 94, 0.1); }
+        .agent-card.warning .agent-status { color: var(--warning); background: rgba(245, 158, 11, 0.1); }
+        .agent-card.passed .agent-status { color: var(--passed); background: rgba(16, 185, 129, 0.1); }
+
+        .agent-content {
+            padding: 0 1rem;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid transparent;
+        }
+
+        .agent-card.expanded .agent-content {
+            padding: 1rem;
+            max-height: 500px;
+            opacity: 1;
+            border-top-color: var(--border);
+        }
+
+        .findings-list {
+            list-style: none;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            color: #D1D5DB;
+        }
+        .findings-list li {
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 6px;
+        }
+        .findings-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--text-secondary);
+        }
+
+        .recommendation {
+            background: rgba(229, 138, 62, 0.05);
+            border-left: 2px solid var(--accent);
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #E2E8F0;
+            border-radius: 0 4px 4px 0;
+        }
+        .rec-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* ROLLBACK PROOF */
+        .rollback-proof {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .code-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .code-panel {
+            background: #000;
+            padding: 1rem;
+        }
+        .code-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+        }
+        
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #A0A0B0;
+            white-space: pre-wrap;
+        }
+
+        /* REQUIRED FIXES */
+        .required-fixes {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .checklist {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .check-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .check-box {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--accent);
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Utils */
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-  <div id="loader">
-    <div class="loader-content">
-      <div class="spinner"></div>
-      <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;">Initializing Atlas View...</div>
-    </div>
-  </div>
 
-  <svg id="d3-canvas"></svg>
-
-  <nav class="top-nav">
-    <div class="logo-container">
-      <svg class="logo-svg" viewBox="0 0 24 24">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-      Bob Release Guard
-    </div>
-    <div id="header-status" class="status-pill">ANALYZING</div>
-  </nav>
-
-  <aside class="sidebar">
-    <header class="sidebar-header">
-      <div class="score-container">
-        <div id="overall-score" class="score-value">--</div>
-        <div class="score-max">/ 100</div>
-      </div>
-      <div class="score-label">Release Readiness Score</div>
+    <header>
+        <div class="logo-area">
+            <svg class="logo-icon" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <div class="title">Bob Release Guard</div>
+        </div>
+        <div class="status-pill" id="globalStatus">
+            <div class="status-dot"></div>
+            <span id="globalStatusText">ANALYZING...</span>
+        </div>
     </header>
-    <div class="sidebar-content">
-      <div id="blockers-section" style="display: none;">
-        <div class="section-title">Critical Blockers (<span id="blocker-count">0</span>)</div>
-        <div id="blockers-list"></div>
-      </div>
-      
-      <div id="fixes-section" style="margin-top: 32px; display: none;">
-        <div class="section-title">Required Fixes</div>
-        <div id="fixes-list"></div>
-      </div>
-    </div>
-  </aside>
-  
-  <div id="tooltip" class="d3-tooltip"></div>
 
-  <script>
-    const FALLBACK_DATA = {
-      "commit": "177dc6a",
-      "status": "BLOCKED",
-      "overallScore": 42,
-      "summary": "Database schema mismatch detected. The column 'emailAddress' is expected but code references 'email'.",
-      "blockers": [
-        {
-          "agent": "Schema Agent",
-          "severity": "HIGH",
-          "description": "Migration file 20231015-rename-email-to-emailAddress.js conflicts with user.js and userController.js which still use 'email'.",
-          "file": "userController.js"
-        },
-        {
-          "agent": "Dependency Agent",
-          "severity": "HIGH",
-          "description": "Package 'pg' version 8.11.0 has a known critical vulnerability. Update to 8.11.3 required.",
-          "file": "package.json"
-        }
-      ],
-      "requiredFixes": [
-        {
-          "agent": "Schema Agent",
-          "action": "Update 'user.js' and 'userController.js' to use 'emailAddress' instead of 'email'."
-        },
-        {
-          "agent": "Dependency Agent",
-          "action": "Run 'npm install pg@8.11.3'."
-        }
-      ]
-    };
+    <main>
+        <!-- LEFT: Terminal -->
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <div class="terminal-dot" style="background:#FF5F56;"></div>
+                    <div class="terminal-dot" style="background:#FFBD2E;"></div>
+                    <div class="terminal-dot" style="background:#27C93F;"></div>
+                </div>
+                agent_terminal_sys.sh
+            </div>
+            <div class="terminal-body" id="terminalOutput">
+                <!-- Logs will be injected here -->
+            </div>
+        </div>
 
-    async function loadData() {
-      try {
-        const response = await fetch('/report.json');
-        if (!response.ok) throw new Error('Network error');
-        return await response.json();
-      } catch (e) {
-        try {
-          const response2 = await fetch('./report.json');
-          if (!response2.ok) throw new Error('Network error');
-          return await response2.json();
-        } catch (e2) {
-          console.warn('Using fallback data');
-          return FALLBACK_DATA;
-        }
-      }
-    }
-
-    function hideLoader() {
-      const loader = document.getElementById('loader');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.style.display = 'none', 300);
-      }
-    }
-
-    function renderUI(data) {
-      // Score
-      const scoreEl = document.getElementById('overall-score');
-      if (scoreEl) {
-        scoreEl.textContent = data.overallScore || 0;
-        scoreEl.style.color = data.overallScore > 80 ? 'var(--safe)' : (data.overallScore > 50 ? 'var(--warning)' : 'var(--danger)');
-      }
-
-      // Status
-      const statusEl = document.getElementById('header-status');
-      if (statusEl) {
-        statusEl.textContent = data.status || 'UNKNOWN';
-        if (data.status === 'SAFE') {
-          statusEl.className = 'status-pill status-safe';
-        } else if (data.status === 'BLOCKED') {
-          statusEl.className = 'status-pill status-blocked';
-        } else {
-          statusEl.className = 'status-pill';
-        }
-      }
-
-      // Blockers
-      const blockersSection = document.getElementById('blockers-section');
-      const blockersList = document.getElementById('blockers-list');
-      const blockerCount = document.getElementById('blocker-count');
-      if (data.blockers && data.blockers.length > 0 && blockersSection && blockersList && blockerCount) {
-        blockersSection.style.display = 'block';
-        blockerCount.textContent = data.blockers.length;
-        blockersList.innerHTML = data.blockers.map(b => `
-          <div class="blocker-item">
-            <div class="item-title">${b.severity} Blocker</div>
-            <div class="item-desc">${b.description}</div>
-            <div class="item-agent">${b.agent} • ${b.file || 'System'}</div>
-          </div>
-        `).join('');
-      }
-
-      // Fixes
-      const fixesSection = document.getElementById('fixes-section');
-      const fixesList = document.getElementById('fixes-list');
-      if (data.requiredFixes && data.requiredFixes.length > 0 && fixesSection && fixesList) {
-        fixesSection.style.display = 'block';
-        fixesList.innerHTML = data.requiredFixes.map(f => `
-          <div class="fix-item">
-            <div class="item-title">Suggested Action</div>
-            <div class="item-desc">${f.action}</div>
-            <div class="item-agent">${f.agent}</div>
-          </div>
-        `).join('');
-      }
-    }
-
-    function buildGraphData(data) {
-      const nodes = [];
-      const links = [];
-      
-      const commitId = data.commit || 'HEAD';
-      
-      nodes.push({ id: 'commit', label: 'Commit ' + commitId, group: 'root', radius: 30 });
-      
-      const agents = ['Schema Agent', 'Config Agent', 'Dependency Agent', 'Rollback Agent'];
-      
-      agents.forEach(agent => {
-        const agentId = 'agent_' + agent.replace(/\s+/g, '');
-        nodes.push({ id: agentId, label: agent, group: 'agent', radius: 20 });
-        links.push({ source: 'commit', target: agentId, value: 2 });
-      });
-
-      // Extract files from blockers to connect to agents
-      if (data.blockers) {
-        data.blockers.forEach((b, i) => {
-          if (b.file) {
-            const fileId = 'file_' + i;
-            const agentId = 'agent_' + b.agent.replace(/\s+/g, '');
+        <!-- RIGHT: Dashboard -->
+        <div class="dashboard-col">
             
-            nodes.push({ 
-              id: fileId, 
-              label: b.file, 
-              group: b.severity === 'HIGH' ? 'danger' : 'warning',
-              radius: 15,
-              desc: b.description
+            <!-- Threat Meter -->
+            <div class="threat-meter">
+                <div class="threat-header">
+                    <div class="section-title" style="margin:0;">Deployment Risk Level</div>
+                    <div class="threat-score" id="riskScoreVal">0</div>
+                </div>
+                <div class="segments" id="threatSegments">
+                    <!-- 20 segments generated by JS -->
+                </div>
+            </div>
+
+            <!-- Agent Matrix -->
+            <div>
+                <div class="section-title">Agent Analysis Matrix</div>
+                <div class="agent-grid" id="agentMatrix">
+                    <!-- Cards generated by JS -->
+                </div>
+            </div>
+
+            <!-- Rollback Proof -->
+            <div class="rollback-proof" id="rollbackProofSection" style="display:none;">
+                <div class="section-title">Rollback Simulation Proof</div>
+                <div class="code-split">
+                    <div class="code-panel">
+                        <div class="code-label">Before Migration</div>
+                        <div class="code-block" id="rbBefore"></div>
+                    </div>
+                    <div class="code-panel">
+                        <div class="code-label">Failed Rollback State</div>
+                        <div class="code-block" id="rbAfter"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Required Fixes -->
+            <div class="required-fixes" id="fixesSection" style="display:none;">
+                <div class="section-title" style="color: var(--accent);">Required Actions to Unblock</div>
+                <ul class="checklist" id="fixesList">
+                    <!-- Fixes injected by JS -->
+                </ul>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const FALLBACK_DATA = {
+            "dashboard_id": "dash_7f9b8c2a4e1d",
+            "status": "blocked",
+            "deployment_risk_score": 85,
+            "timestamp": "2024-05-18T14:32:00Z",
+            "target_environment": "production",
+            "agents": [
+                {
+                    "name": "SchemaAgent",
+                    "status": "critical",
+                    "findings": [
+                        "Detected dropping of column 'legacy_user_id' in 'users' table.",
+                        "High risk of data loss if deployed before application code is updated."
+                    ],
+                    "recommendation": "Use a multi-phase migration: 1. Add new column. 2. Dual-write. 3. Stop reading old. 4. Drop old column."
+                },
+                {
+                    "name": "ConfigAgent",
+                    "status": "warning",
+                    "findings": [
+                        "Environment variable 'STRIPE_API_KEY' is missing in the production configuration."
+                    ],
+                    "recommendation": "Ensure 'STRIPE_API_KEY' is injected via Secrets Manager before deployment."
+                },
+                {
+                    "name": "DependencyAgent",
+                    "status": "passed",
+                    "findings": [
+                        "All microservice dependencies (AuthService v1.2, PaymentService v2.0) are compatible."
+                    ],
+                    "recommendation": "No action required."
+                },
+                {
+                    "name": "RollbackAgent",
+                    "status": "critical",
+                    "findings": [
+                        "Tested automatic rollback script failed.",
+                        "Cannot reverse 'DROP COLUMN legacy_user_id' without explicit data restoration strategy."
+                    ],
+                    "recommendation": "Provide a manual rollback SQL script or avoid dropping the column."
+                }
+            ],
+            "actionable_fixes": [
+                "Revert the 'DROP COLUMN legacy_user_id' migration and replace with a deprecation phase.",
+                "Add 'STRIPE_API_KEY' to the production secrets vault.",
+                "Provide a valid down-migration script for the schema changes."
+            ],
+            "rollback_proof": {
+                "before": "-- Current State\nCREATE TABLE users (\n  id UUID PRIMARY KEY,\n  email VARCHAR(255),\n  legacy_user_id INT\n);",
+                "after": "-- Attempted Rollback State (FAILED)\nALTER TABLE users ADD COLUMN legacy_user_id INT;\n-- Data from legacy_user_id is permanently lost."
+            }
+        };
+
+        const ICONS = {
+            'SchemaAgent': '<path d="M4 7V4h16v3M4 7v10c0 1.66 3.58 3 8 3s8-1.34 8-3V7M4 7c0 1.66 3.58 3 8 3s8-1.34 8-3"></path>',
+            'ConfigAgent': '<path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>',
+            'DependencyAgent': '<path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>',
+            'RollbackAgent': '<path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>'
+        };
+
+        async function loadData() {
+            try {
+                let res = await fetch('/report.json');
+                if (!res.ok) throw new Error();
+                return await res.json();
+            } catch {
+                try {
+                    let res = await fetch('./report.json');
+                    if (!res.ok) throw new Error();
+                    return await res.json();
+                } catch {
+                    return FALLBACK_DATA;
+                }
+            }
+        }
+
+        const terminalOutput = document.getElementById('terminalOutput');
+        let cursorNode = document.createElement('span');
+        cursorNode.className = 'cursor';
+        
+        function addTerminalLine(htmlContent, delay) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const div = document.createElement('div');
+                    div.className = 'log-line';
+                    div.innerHTML = `<span class="log-prefix">></span> ${htmlContent}`;
+                    
+                    if(cursorNode.parentNode) {
+                        terminalOutput.removeChild(cursorNode);
+                    }
+                    terminalOutput.appendChild(div);
+                    terminalOutput.appendChild(cursorNode);
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                    
+                    resolve();
+                }, delay);
             });
+        }
+
+        async function simulateTerminal(data) {
+            await addTerminalLine(`Initializing Bob Release Guard System...`, 500);
+            await addTerminalLine(`Target Environment: <span class="log-accent">${data.target_environment}</span>`, 400);
+            await addTerminalLine(`Loading multi-agent subroutines...`, 600);
             
-            // Connect agent to file
-            const agentExists = nodes.find(n => n.id === agentId);
-            links.push({ source: agentExists ? agentId : 'commit', target: fileId, value: 1 });
-          }
-        });
-      }
+            for (let agent of data.agents) {
+                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] Waking up and starting analysis...`, 800);
+                
+                let findingsSummary = agent.findings[0] || 'Analyzing vectors...';
+                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] ${findingsSummary}`, 1200);
+                
+                let statusClass = 'log-success';
+                let statusText = 'OK';
+                if(agent.status === 'warning') { statusClass = 'log-warn'; statusText = 'WARN'; }
+                else if(agent.status === 'critical') { statusClass = 'log-error'; statusText = 'CRITICAL'; }
+                
+                await addTerminalLine(`[<span class="log-agent">${agent.name}</span>] Result: <span class="${statusClass}">${statusText}</span>`, 600);
+            }
 
-      // Add a dummy safe file for visual flavor
-      nodes.push({ id: 'safe_1', label: 'README.md', group: 'safe', radius: 10 });
-      links.push({ source: 'agent_ConfigAgent', target: 'safe_1', value: 1 });
-      
-      return { nodes, links };
-    }
-
-    function renderD3(data) {
-      const graphData = buildGraphData(data);
-      
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
-      const svg = d3.select("#d3-canvas")
-        .attr("viewBox", [0, 0, width, height]);
-        
-      const g = svg.append("g");
-      
-      // Setup Zoom
-      const zoom = d3.zoom()
-        .scaleExtent([0.5, 4])
-        .on("zoom", (event) => {
-          g.attr("transform", event.transform);
-        });
-        
-      svg.call(zoom);
-
-      const simulation = d3.forceSimulation(graphData.nodes)
-        .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-500))
-        .force("center", d3.forceCenter(width / 2 - 100, height / 2))
-        .force("collide", d3.forceCollide().radius(d => d.radius + 10));
-
-      // Glow filter
-      const defs = svg.append("defs");
-      const filter = defs.append("filter")
-          .attr("id", "glow");
-      filter.append("feGaussianBlur")
-          .attr("stdDeviation", "3")
-          .attr("result", "coloredBlur");
-      const feMerge = filter.append("feMerge");
-      feMerge.append("feMergeNode").attr("in", "coloredBlur");
-      feMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-      const link = g.append("g")
-        .attr("stroke", "var(--link-color)")
-        .attr("stroke-opacity", 0.6)
-        .selectAll("line")
-        .data(graphData.links)
-        .join("line")
-        .attr("stroke-width", d => Math.sqrt(d.value) * 1.5);
-
-      const nodeGroup = g.append("g")
-        .selectAll(".node")
-        .data(graphData.nodes)
-        .join("g")
-        .attr("class", "node")
-        .call(drag(simulation));
-        
-      const tooltip = d3.select("#tooltip");
-
-      nodeGroup.append("circle")
-        .attr("r", d => d.radius)
-        .attr("fill", d => {
-          if (d.group === 'root') return "var(--node-root)";
-          if (d.group === 'agent') return "var(--node-agent)";
-          if (d.group === 'danger') return "var(--node-danger)";
-          if (d.group === 'warning') return "var(--warning)";
-          return "var(--node-safe)";
-        })
-        .style("filter", "url(#glow)")
-        .on("mouseover", (event, d) => {
-          tooltip.transition().duration(200).style("opacity", 1);
-          tooltip.html(`<strong>${d.label}</strong>${d.desc ? '<br/>' + d.desc : ''}`)
-            .style("left", (event.pageX + 15) + "px")
-            .style("top", (event.pageY - 15) + "px");
-          
-          d3.select(event.currentTarget).attr("stroke", "#fff").attr("stroke-width", 2);
-        })
-        .on("mouseout", (event, d) => {
-          tooltip.transition().duration(500).style("opacity", 0);
-          d3.select(event.currentTarget).attr("stroke", null);
-        });
-
-      nodeGroup.append("text")
-        .text(d => d.label)
-        .attr("x", d => d.radius + 8)
-        .attr("y", 4)
-        .style("font-family", "'JetBrains Mono', monospace")
-        .style("font-size", "12px")
-        .style("fill", "var(--text-main)")
-        .style("pointer-events", "none")
-        .style("text-shadow", "0px 2px 4px rgba(0,0,0,0.8)");
-
-      simulation.on("tick", () => {
-        link
-          .attr("x1", d => d.source.x)
-          .attr("y1", d => d.source.y)
-          .attr("x2", d => d.target.x)
-          .attr("y2", d => d.target.y);
-
-        nodeGroup
-          .attr("transform", d => `translate(${d.x},${d.y})`);
-      });
-
-      function drag(simulation) {
-        function dragstarted(event) {
-          if (!event.active) simulation.alphaTarget(0.3).restart();
-          event.subject.fx = event.subject.x;
-          event.subject.fy = event.subject.y;
+            await addTerminalLine(`<br>`, 200);
+            await addTerminalLine(`Calculating deployment risk vector...`, 1000);
+            await addTerminalLine(`Risk Score: <span class="${data.status === 'blocked' ? 'log-error' : 'log-success'}">${data.deployment_risk_score}/100</span>`, 600);
+            await addTerminalLine(`FINAL VERDICT: <span class="${data.status === 'blocked' ? 'log-error' : 'log-success'}">${data.status.toUpperCase()}</span>`, 800);
+            
+            // Trigger UI reveal
+            revealDashboard(data);
         }
-        
-        function dragged(event) {
-          event.subject.fx = event.x;
-          event.subject.fy = event.y;
-        }
-        
-        function dragended(event) {
-          if (!event.active) simulation.alphaTarget(0);
-          event.subject.fx = null;
-          event.subject.fy = null;
-        }
-        
-        return d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended);
-      }
-      
-      // Initial zoom transform
-      svg.call(zoom.transform, d3.zoomIdentity.translate(0, 0).scale(1));
-    }
 
-    async function init() {
-      try {
-        const data = await loadData();
-        renderUI(data);
-        renderD3(data);
-      } catch (e) {
-        console.error("Error initializing dashboard:", e);
-      } finally {
-        hideLoader();
-      }
-    }
+        function buildThreatMeter(score) {
+            const container = document.getElementById('threatSegments');
+            document.getElementById('riskScoreVal').textContent = score;
+            const numSegments = 20;
+            const segmentsToFill = Math.round((score / 100) * numSegments);
 
-    // Run on load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
-  </script>
+            for(let i=0; i<numSegments; i++) {
+                const seg = document.createElement('div');
+                seg.className = 'segment';
+                container.appendChild(seg);
+                
+                setTimeout(() => {
+                    if (i < segmentsToFill) {
+                        if (score >= 80) seg.classList.add('active-critical');
+                        else if (score >= 40) seg.classList.add('active-warning');
+                        else seg.classList.add('active-passed');
+                    }
+                }, i * 50);
+            }
+        }
+
+        function buildAgentMatrix(agents) {
+            const container = document.getElementById('agentMatrix');
+            agents.forEach((agent, i) => {
+                const card = document.createElement('div');
+                card.className = `agent-card ${agent.status}`;
+                
+                const findingsHtml = agent.findings.map(f => `<li>${f}</li>`).join('');
+                const iconSvg = ICONS[agent.name] || ICONS['SchemaAgent'];
+
+                card.innerHTML = `
+                    <div class="agent-header" onclick="this.parentElement.classList.toggle('expanded')">
+                        <div class="agent-name-wrap">
+                            <svg class="agent-icon" viewBox="0 0 24 24">${iconSvg}</svg>
+                            <span class="agent-name">${agent.name}</span>
+                        </div>
+                        <span class="agent-status">${agent.status}</span>
+                    </div>
+                    <div class="agent-content">
+                        <ul class="findings-list">${findingsHtml}</ul>
+                        <div class="recommendation">
+                            <span class="rec-label">AI Recommendation</span>
+                            ${agent.recommendation}
+                        </div>
+                    </div>
+                `;
+                
+                // Expand criticals by default after a delay
+                if(agent.status === 'critical') {
+                    setTimeout(() => card.classList.add('expanded'), 500 + (i*200));
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function revealDashboard(data) {
+            // Update Header
+            const statusPill = document.getElementById('globalStatus');
+            const statusText = document.getElementById('globalStatusText');
+            
+            if(data.status === 'blocked') {
+                statusText.textContent = 'DEPLOYMENT BLOCKED';
+                statusPill.style.color = 'var(--critical)';
+                statusPill.style.borderColor = 'var(--critical)';
+                statusPill.style.background = 'rgba(244, 63, 94, 0.1)';
+            } else {
+                statusText.textContent = 'READY TO DEPLOY';
+                statusPill.style.color = 'var(--passed)';
+                statusPill.style.borderColor = 'var(--passed)';
+                statusPill.style.background = 'rgba(16, 185, 129, 0.1)';
+                document.querySelector('.status-dot').style.background = 'var(--passed)';
+            }
+
+            buildThreatMeter(data.deployment_risk_score);
+            buildAgentMatrix(data.agents);
+
+            if(data.rollback_proof) {
+                document.getElementById('rollbackProofSection').style.display = 'block';
+                document.getElementById('rbBefore').textContent = data.rollback_proof.before;
+                document.getElementById('rbAfter').textContent = data.rollback_proof.after;
+            }
+
+            if(data.actionable_fixes && data.actionable_fixes.length > 0) {
+                document.getElementById('fixesSection').style.display = 'block';
+                const flist = document.getElementById('fixesList');
+                data.actionable_fixes.forEach(fix => {
+                    const li = document.createElement('li');
+                    li.className = 'check-item';
+                    li.innerHTML = `<div class="check-box"></div><div>${fix}</div>`;
+                    flist.appendChild(li);
+                });
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', async () => {
+            const data = await loadData();
+            // Start the terminal animation, which reveals the rest
+            terminalOutput.appendChild(cursorNode);
+            simulateTerminal(data);
+        });
+    </script>
 </body>
 </html>
